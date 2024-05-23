@@ -42,14 +42,14 @@ toggleTextVisibility(title, titleText);
 // * Retrieve ToDo from local storage
 
 let todo = JSON.parse(localStorage.getItem("todo"));
-
+let count = 0;
 // * Add new ToDo
 
 const addTodo = document.getElementById('addBtn');
 addTodo.addEventListener('click', function () {
     const input = document.getElementById('todo_text');
     const todo = input.value;
-    if (todo === '' || todo.replace(/\s/g, "" == '')) {
+    if (todo === '' || todo.trim() === '') {
         input.value = '';
         window.alert('Please enter a task');
         return;
@@ -60,7 +60,14 @@ addTodo.addEventListener('click', function () {
     const li = document.createElement('li');
     document.getElementById('todo_list').appendChild(li);
     li.innerHTML = todo;
+    count += 1;
 });
+
+
+function toogleTask(index) {
+    todo[index].disable = !todo[index].disable;
+    localStorage.setItem('todo', JSON.stringify(todo));
+}
 
 // * Delete ToDo
 
@@ -71,7 +78,7 @@ addTodo.addEventListener('click', function () {
 //     input.value = '';
 //     if (todo) {
 //         const index = todo.indexOf(todo);
-//          todo.splice(index, 1);
+//         todo.splice(index, 1);
 //         localStorage.setItem('todo', JSON.stringify(todo));
 //         const li = document.getElementById(todo);
 //         li.parentNode.removeChild(li);
