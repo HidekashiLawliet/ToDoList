@@ -59,19 +59,15 @@ addTodo.addEventListener('click', function () {
     localStorage.setItem('todo', JSON.stringify(todo));
     const li = document.createElement('li');
     document.getElementById('todo_list').appendChild(li);
-    li.innerHTML = todo;
     count += 1;
+    li.innerHTML = `<button class="completed">✔</button>${todo} <button class="delete_btn">X</button>`;
 });
 
 
-function toogleTask(index) {
-    todo[index].disable = !todo[index].disable;
-    localStorage.setItem('todo', JSON.stringify(todo));
-}
 
 // * Delete ToDo
 
-// const deleteTodo = document.getElementById('delete-todo');
+// const deleteTodo = document.getElementById('delete_btn');
 // deleteTodo.addEventListener('click', function () {
 //     const input = document.getElementById('todo-input');
 //     const todo = input.value;

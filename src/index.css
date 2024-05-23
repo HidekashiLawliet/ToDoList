@@ -56,8 +56,8 @@ input:focus {
 
 }
 
-
 #text_area input {
+
     margin-right: 3rem;
     height: 2rem;
 }
@@ -76,7 +76,6 @@ input:focus {
     padding: 5px;
     border: none;
     background-size: 300% 100%;
-
     border-radius: 50px;
     moz-transition: all .4s ease-in-out;
     -o-transition: all .4s ease-in-out;
@@ -106,17 +105,38 @@ ul {
     margin: 0px;
     height: 30rem;
     overflow-y: scroll;
+    overflow-x: hidden;
     scrollbar-width: thin;
-    border-bottom: 2px solid #4f498a;
+    border-bottom: 2px solid #000000;
     background-color: #fff;
     border-radius: 5px;
     scrollbar-color: rgb(237, 137, 247) rgb(117, 126, 243)
 }
 
 li {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    align-tracks: start;
+    grid-row: 0;
+    list-style: none;
+    margin: 0px;
     padding: 1rem;
+    width: 100%;
+}
+
+li .completed {
+    width: fit-content;
+    margin-right: 2rem;
+    border: none;
+    background-color: transparent;
+    color: green;
+}
+
+li .delete_btn {
+    width: fit-content;
+    display: flex;
+    border: none;
+    background-color: transparent;
+    color: red;
 }
 
 #todo_list p {
@@ -145,23 +165,4 @@ input[type="text"]::before::after {
     background-color: hsl(120, 100%, 25%);
     border: 0.06rem solid hsl(120, 100%, 25%);
     border-radius: 50%;
-}
-
-
-.scroll {
-    height: 15rem;
-    scrollbar-width: thin;
-}
-
-.scroll::-webkit-scrollbar {
-    width: 0.6rem;
-}
-
-.scroll::-webkit-scrollbar-thumb {
-    background-color: var(--blue);
-    border-radius: 0.5rem;
-}
-
-.scroll::-webkit-scrollbar-track {
-    display: none;
 }
