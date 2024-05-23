@@ -7,34 +7,31 @@
     <title>ToDo List</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="src/bootstrap-5.0.2-dist/css/bootstrap.css">
     <link rel="stylesheet" href="src/index.css">
 </head>
 
 <body>
-    <div id="header">
-        <div id="title"></div>
-        <div id="typewriter"></div>
-    </div>
-
-    <div id="task_card_body">
-        <div id="text_area">
-            <input type="text" placeholder="Add a task" />
-            <button class="btn">Add new task</button>
+    <section class="todo">
+        <div id="header">
+            <div id="title"></div>
+            <div id="typewriter"></div>
         </div>
-        <div id="task">
-            <ul id="scroll_list">
-                <li id="todo_list"></li>
-            </ul>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Praesentium possimus dolore impedit accusamus magni
-            obcaecati officiis, fugit odit libero rem mollitia quos commodi laboriosam iusto alias nihil. Odio,
-            provident maxime.
+        <div id="task_card_body">
+            <div id="text_area">
+                <input type="text" id="todo_text" placeholder="Add a task" />
+                <button id="addBtn">Add new task</button>
+            </div>
+            <div id="task">
+                <ul id="scroll_list">
+                    <li id="todo_list"></li>
+                </ul>
+            </div>
+            <div class="project_counter">
+                <p>number of projects: <span id="project_counter">0</span></p>
+                <p>number of finished projects: <span id="finished_project_counter">0</span></p>
+            </div>
         </div>
-        <div class="project_counter">
-            <p>number of projects: <span id="project_counter">0</span></p>
-            <p>number of finished projects: <span id="finished_project_counter">0</span></p>
-        </div>
-    </div>
+    </section>
     <script src="src/index.js" async defer></script>
 </body>
 

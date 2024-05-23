@@ -66,7 +66,7 @@ input:focus {
     display: flex;
 }
 
-.btn {
+#addBtn {
     width: fit-content;
     font-size: 16px;
     color: #fff;
@@ -84,7 +84,7 @@ input:focus {
     transition: all .4s ease-in-out;
 }
 
-.btn:hover {
+#addBtn:hover {
     background-position: 100% 0;
     moz-transition: all .4s ease-in-out;
     -o-transition: all .4s ease-in-out;
@@ -92,11 +92,11 @@ input:focus {
     transition: all .4s ease-in-out;
 }
 
-.btn:focus {
+#addBtn:focus {
     outline: none;
 }
 
-.btn {
+#addBtn {
     background-image: linear-gradient(to right, #6253e1, #852D91, #A3A1FF, #F24645);
     box-shadow: 0 4px 15px 0 rgba(126, 52, 161, 0.75);
 }
