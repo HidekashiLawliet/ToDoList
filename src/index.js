@@ -39,11 +39,11 @@ function toggleTextVisibility(element, text, duration = 200) {
 
 toggleTextVisibility(title, titleText);
 
-// * Retrieve ToDo from local storage
 
+const addTodo = document.getElementById('addBtn');
 let todo = JSON.parse(localStorage.getItem("todo"));
 let count = 0;
-// * Add new ToDo
+
 function addItemInList() {
     const input = document.getElementById('todo_text');
     const todo = input.value;
@@ -55,13 +55,29 @@ function addItemInList() {
     input.value = '';
     console.log(todo);
     localStorage.setItem('todo', JSON.stringify(todo));
+    const buttonDiv = document.createElement('div');
     const li = document.createElement('li');
-    document.getElementById('todo_list').appendChild(li);
+    document.getElementById('scroll_list').appendChild(buttonDiv);
+    buttonDiv.className = 'buttonDiv';
+    document.getElementById('scroll_list').appendChild(li);;
     count += 1;
-    li.innerHTML = `<button class="completed">✔</button>${todo} <button class="delete_btn">X</button>`;
+    buttonDiv.innerHTML = `<button class="completed_btn" onClick="toggleCompleted(this)">✔</button><button class="delete_btn" onClick="deleteItem(this)">X</button>`;
+    li.innerHTML = `${todo}`;
 }
 
-const addTodo = document.getElementById('addBtn');
+function toggleCompleted(todo) {
+    let enable = true;
+    TextCompleted(todo, enable);
+    console.log('task completed');
+}
+
+function TextCompleted(todo, enable) {
+    // todo.style.textDecoration = enable ? 'line-through' : 'none';
+    todo.innerHTML += todo + ': completed';
+    console.log('task uncompleted');
+}
+
+
 addTodo.addEventListener('click', function () {
     addItemInList()
 });

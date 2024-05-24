@@ -100,7 +100,7 @@ input:focus {
     box-shadow: 0 4px 15px 0 rgba(126, 52, 161, 0.75);
 }
 
-ul {
+#scroll_list {
     padding: 0px;
     margin: 0px;
     height: 30rem;
@@ -118,23 +118,34 @@ li {
     align-tracks: start;
     grid-row: 0;
     list-style: none;
-    margin: 0px;
-    padding: 1rem;
+    margin: 1.3rem;
     width: 100%;
+    overflow-x: hidden;
+    padding-bottom: 1rem;
+    border-bottom: #2e2e2e solid 2px;
 }
 
-li .completed {
+.buttonDiv {
+    display: flex;
+    margin: 1rem;
+}
+
+.completed_btn {
     width: fit-content;
     margin-right: 2rem;
+    font-size: 24px; 
     border: none;
     background-color: transparent;
     color: green;
 }
 
-li .delete_btn {
-    width: fit-content;
+.delete_btn {
     display: flex;
+    width: fit-content;
+    margin-left: 90%;
+    margin-top: 0px ;
     border: none;
+    font-size: 24px; 
     background-color: transparent;
     color: red;
 }
@@ -166,3 +177,4 @@ input[type="text"]::before::after {
     border: 0.06rem solid hsl(120, 100%, 25%);
     border-radius: 50%;
 }
+
