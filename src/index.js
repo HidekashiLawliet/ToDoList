@@ -44,9 +44,7 @@ toggleTextVisibility(title, titleText);
 let todo = JSON.parse(localStorage.getItem("todo"));
 let count = 0;
 // * Add new ToDo
-
-const addTodo = document.getElementById('addBtn');
-addTodo.addEventListener('click', function () {
+function addItemInList() {
     const input = document.getElementById('todo_text');
     const todo = input.value;
     if (todo === '' || todo.trim() === '') {
@@ -61,9 +59,21 @@ addTodo.addEventListener('click', function () {
     document.getElementById('todo_list').appendChild(li);
     count += 1;
     li.innerHTML = `<button class="completed">✔</button>${todo} <button class="delete_btn">X</button>`;
+}
+
+const addTodo = document.getElementById('addBtn');
+addTodo.addEventListener('click', function () {
+    addItemInList()
 });
 
 
+window.addEventListener('keydown', function (event) {
+    if (event.keyCode === 13) {
+        addItemInList();
+        console.log('key enter pressed');
+    }
+    return;
+});
 
 // * Delete ToDo
 
