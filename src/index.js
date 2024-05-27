@@ -1,4 +1,6 @@
 
+totalTasks = 0;
+
 window.onload = function () {
     var pageTitle = document.title;
     var attentionMessage = 'Come back here and focus ';
@@ -39,7 +41,6 @@ function toggleTextVisibility(element, text, duration = 200) {
 
 toggleTextVisibility(title, titleText);
 
-
 const addTodo = document.getElementById('addBtn');
 let todo = JSON.parse(localStorage.getItem("todo"));
 let count = 0;
@@ -59,29 +60,43 @@ function addItemInList() {
     const li = document.createElement('li');
     document.getElementById('scroll_list').appendChild(buttonDiv);
     buttonDiv.className = 'buttonDiv';
-    document.getElementById('scroll_list').appendChild(li);;
-    count += 1;
-    buttonDiv.innerHTML = `<button class="completed_btn" onClick="toggleCompleted(this)">✔</button><button class="delete_btn" onClick="deleteItem(this)">X</button>`;
+    document.getElementById('scroll_list').appendChild(li);
+    li.className = count;
     li.innerHTML = `${todo}`;
+    // buttonDiv.innerHTML = `<button class="completed_btn" onClick="toggleCompleted(this)">✔: mark task as completed</button><button class="delete_btn" onClick="deleteItem(this)">X: delete task</button>`;
+    // li.innerHTML = `<input type="checkbox" id="taskCheck" onClick="toggleCompleted(this)"> ${todo}`;
+    li.innerHTML = `
+    <input type="checkbox" id="todo" name="todo" value="todo">
+    <label for="todo" data-content="Get out of bed">Get out of bed</label>    
+    `
+
+
+
+    totalTasks += 1;
+    ItemCounter(totalTasks);
 }
 
-function toggleCompleted(todo) {
-    let enable = true;
-    TextCompleted(todo, enable);
-    console.log('task completed');
+function toggleCompleted(element) {
+    let enable = false;
+    if (element.checked) {
+        console.log('task completed');
+        element.parentNode.className = 'completed';
+    } else {
+        console.log('task not completed');
+    }
 }
 
-function TextCompleted(todo, enable) {
-    // todo.style.textDecoration = enable ? 'line-through' : 'none';
-    todo.innerHTML += todo + ': completed';
-    console.log('task uncompleted');
-}
 
+project_counter = document.getElementById('project_counter');
+function ItemCounter(nb) {
+    let total = 0;
+    total += nb;
+    project_counter.innerHTML = total;
+}
 
 addTodo.addEventListener('click', function () {
     addItemInList()
 });
-
 
 window.addEventListener('keydown', function (event) {
     if (event.keyCode === 13) {
