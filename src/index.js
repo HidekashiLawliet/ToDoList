@@ -1,4 +1,5 @@
 
+// * Change page title if focus or not
 window.onload = function () {
     var pageTitle = document.title;
     var attentionMessage = 'Come back here and focus ';
@@ -7,7 +8,9 @@ window.onload = function () {
         document.title = document.hidden ? `${attentionMessage} 😡` : pageTitle;
     });
 }
+// * -------------------
 
+// * Create a typing effect for the title
 const title = document.getElementById("title");
 const titleText = "ToDo List";
 
@@ -36,13 +39,16 @@ function toggleTextVisibility(element, text, duration = 200) {
     }
     typingEffect();
 }
-
 toggleTextVisibility(title, titleText);
 
+// * -----------------
+
+
+// * Create li element inside the ul
 const addTodo = document.getElementById('addBtn');
 let todo = JSON.parse(localStorage.getItem("todo"));
-let count = 0;
 let totalTasks = 0;
+let IDcount = 0;
 
 function addItemInList() {
     const input = document.getElementById('todo_text');
@@ -57,8 +63,8 @@ function addItemInList() {
     localStorage.setItem('todo', JSON.stringify(todo));
     const li = document.createElement('li');
     document.getElementById('scroll_list').appendChild(li);
-    li.className = count;
-    li.innerHTML = `${todo}`;
+    li.className = (IDcount += 1);
+    li.innerHTMvL = `${todo}`;
     li.innerHTML = `
         <input type="checkbox" id="todo" name="todo" value="todo">
         <label for="todo" data-content="${todo}">${todo}</label>
@@ -71,11 +77,12 @@ function addItemInList() {
         deleteItem(this);
     });
     console.log(li.appendChild);
-
     totalTasks += 1;
     ItemCounter(totalTasks);
 }
+// * ------------------
 
+// * Various litle function to make the one above work
 function deleteItem(element) {
     totalTasks -= 1;
     element.parentNode.parentNode.removeChild(element.parentNode);
@@ -101,3 +108,15 @@ window.addEventListener('keydown', function (event) {
     }
     return;
 });
+
+function deleteAll() {
+    const ul = document.getElementById('scroll_list');
+    if (ul) {
+        while (ul.lastChild) {
+            ul.removeChild(ul.lastChild);
+        }
+    }
+    ItemCounter(ul.children.length);
+}
+
+// * -------------------
