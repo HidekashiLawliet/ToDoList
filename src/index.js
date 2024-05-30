@@ -59,7 +59,6 @@ function addItemInList() {
         return;
     }
     input.value = '';
-    console.log(todo);
     localStorage.setItem('todo', JSON.stringify(todo));
     const li = document.createElement('li');
     document.getElementById('scroll_list').appendChild(li);
@@ -76,9 +75,9 @@ function addItemInList() {
     deleteBtn.addEventListener('click', function () {
         deleteItem(this);
     });
-    console.log(li.appendChild);
     totalTasks += 1;
     ItemCounter(totalTasks);
+    localStorage.setItem('todo', JSON.stringify(todo));
 }
 // * ------------------
 
@@ -104,7 +103,6 @@ addTodo.addEventListener('click', function () {
 window.addEventListener('keydown', function (event) {
     if (event.keyCode === 13) {
         addItemInList();
-        console.log('key enter pressed');
     }
     return;
 });
