@@ -1,35 +1,50 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>ToDo List</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="src/index.css">
-</head>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>ToDo List</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="src/index.css">
+    </head>
 
-<body>
-    <section class="todo">
-        <div id="header">
-            <div id="title"></div>
-            <div id="typewriter"></div>
-        </div>
-        <div id="task_card_body">
-            <div id="text_area">
-                <input type="text" id="todo_text" placeholder="Add a task" />
-                <button id="addBtn">Add new task</button>
+    <body class="container">
+        <header id="header">
+            <h1 id="title">&#12644;</h1>
+        </header>
+        <video id="bg_video" autoplay muted loop playsinline>
+            <source src="ressources/black-hole2.960x540.mp4" type="video/mp4">
+        </video>
+        <section class="todo">
+            <div id="task_card_body">
+                <div id="text_area">
+                    <input type="text" id="todo_text" placeholder="Add a task">
+                    <button id="addBtn" onclick="addItemInList()">Add new task</button>
+                </div>
+                <div id="task">
+                    <ul id="scroll_list"></ul>
+                </div>
+                <div class="project_counter">
+                    <p>number of projects: <span id="project_counter">0</span></p>
+                    <button id="delete_all" onclick="deleteAll()">Delete all task</button>
+                </div>
             </div>
-            <div id="task">
-                <ul id="scroll_list"></ul>
+        </section>
+        <section class="pomodoro">
+            <div id="pomo_card_body">
+                <div id="pomo_text_area">
+                    <h2 id="pomo_mode">Pomodoro Timer</h2>
+                    <p id="pomo_time">30:00</p>
+                </div>
+                <div id="pomo_btns">
+                    <button id="startBtn">Start</button>
+                    <button id="pauseBtn">Pause</button>
+                    <button id="resetBtn">Reset</button>
+                </div>
             </div>
-            <div class="project_counter">
-                <p>number of projects: <span id="project_counter">0</span></p>
-                <button id="delete_all" onclick="deleteAll()">Delete all task</button>
-            </div>
-        </div>
-    </section>
-    <script src="src/index.js" async defer></script>
-</body>
+        </section>
+        <script src="src/index.js" async defer></script>
+    </body>
 
 </html>

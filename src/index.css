@@ -12,6 +12,49 @@ body {
     margin: 0;
 }
 
+.container {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "header header"
+        "pomodoro todo";
+    align-items: start;
+}
+
+#header {
+    grid-area: header;
+}
+
+.pomodoro {
+    grid-area: pomodoro;
+}
+
+.todo {
+    grid-area: todo;
+}
+
+/* On narrow screens, stack the timer above the list */
+@media (max-width: 800px) {
+    .container {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "header"
+            "pomodoro"
+            "todo";
+    }
+}
+
+
+#bg_video {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+    pointer-events: none;
+}
+
 #todo_text {
     align-content: first baseline;
     box-shadow: 0px 2px #2e2e2e;
@@ -19,8 +62,10 @@ body {
     border: 0px;
     padding: 5px;
     height: fit-content;
-    width: 89%;
+    width: 100%;
     font-size: 16px;
+    background-color: #ffffff00;
+    color: white;
 }
 
 #todo_text:focus {
@@ -47,27 +92,34 @@ body {
     margin: 3rem;
     height: fit-content;
     display: grid;
-    background-color: #ff3c004d;
     color: rgb(0, 0, 0);
     font-size: 1.5rem;
     padding: 1rem 1rem 0rem 1rem;
     height: 45rem;
     border-radius: 10px;
     border: 2px solid rgb(0, 0, 0);
+    background-color: rgba(255, 255, 255, 0.089);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
 }
+
+#task_card_body input {
+    border-radius: 5px;
+}
+
 
 #text_area input {
     margin-right: 3rem;
     height: 2rem;
+
 }
 
 #addBtn {
     font-size: 16px;
     color: #fff;
     cursor: pointer;
-    height: 4rem;
-    width: 7rem;
-    padding: 5px;
+    height: 3rem;
+    margin-top: 0.5rem;
     border: none;
     background-size: 300% 100%;
     border-radius: 50px;
@@ -99,11 +151,33 @@ body {
     height: 30rem;
     padding-right: 40px;
     overflow-y: scroll;
-    scrollbar-width: thin;
     border-bottom: 2px solid #000000;
-    background-color: #fff;
+    background-color: #ffffff00;
     border-radius: 5px;
-    scrollbar-color: rgb(237, 137, 247) rgb(117, 126, 243)
+    color: rgb(102, 2, 218);
+}
+
+/* Rounded scrollbar (Chrome, Edge, Safari) */
+#scroll_list::-webkit-scrollbar {
+    width: 10px;
+}
+
+#scroll_list::-webkit-scrollbar-track {
+    background: rgb(214, 214, 221);
+    border-radius: 5px;
+}
+
+#scroll_list::-webkit-scrollbar-thumb {
+    background: rgb(237, 137, 247);
+    border-radius: 5px;
+}
+
+/* Firefox can't round scrollbars, so it only gets the colors */
+@supports not selector(::-webkit-scrollbar) {
+    #scroll_list {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(237, 137, 247) rgb(214, 214, 221);
+    }
 }
 
 li {
@@ -182,6 +256,7 @@ input[type="checkbox"] {
 
         ~label::before {
             clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+            color: rgba(73, 255, 48, 0.699);
         }
     }
 }
@@ -197,7 +272,6 @@ label {
     &::before {
         position: absolute;
         content: attr(data-content);
-        color: lightgray;
         clip-path: polygon(0 0, 0 0, 0% 100%, 0 100%);
         text-decoration: line-through;
         text-decoration-thickness: 3px;
@@ -208,6 +282,7 @@ label {
 
 .project_counter {
     display: flex;
+    color: white;
     justify-content: space-between;
 }
 
@@ -220,11 +295,76 @@ label {
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-
+    color: white;
     transition: all .4s ease-in-out;
 
     &:hover {
-        border: 2px solid rgb(255, 0, 0);
-        color: rgb(255, 255, 255);
+        color: rgb(97, 3, 219);
+    }
+}
+
+
+/* * POMODORO  * */
+#pomo_card_body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: fit-content;
+    margin: 3rem 0 0 3rem;
+    padding: 1.5rem 2rem 2rem;
+    border-radius: 10px;
+    border: 2px solid rgb(0, 0, 0);
+    background-color: rgba(255, 255, 255, 0.089);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+#pomo_text_area {
+    margin: auto;
+    text-align: center;
+}
+
+#pomo_text_area h2 {
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: normal;
+    color: white;
+    border-bottom: 2px solid #2e2e2e;
+}
+
+#pomo_text_area p {
+    margin: 0;
+    font-size: 4rem;
+    font-weight: 600;
+    color: rgb(102, 2, 218);
+    font-variant-numeric: tabular-nums;
+}
+
+#pomo_btns {
+    display: flex;
+    gap: 0.75rem;
+}
+
+#pomo_btns button {
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+    height: 3rem;
+    padding: 0 1.25rem;
+    border: none;
+    border-radius: 50px;
+    background-image: linear-gradient(to right, #6253e1, #852D91, #A3A1FF, #F24645);
+    background-size: 300% 100%;
+    box-shadow: 0 4px 15px 0 rgba(126, 52, 161, 0.75);
+    transition: all .4s ease-in-out;
+
+    &:hover {
+        background-position: 100% 0;
+    }
+
+    &:focus {
+        outline: none;
     }
 }
