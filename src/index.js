@@ -89,9 +89,79 @@ function renderItem(item) {
         deleteItem(li, item.id);
     });
 
-    li.append(checkbox, label, deleteBtn);
+    const subtask = document.createElement('ul');
+    subtask.className = 'subtask-list';
+    (item.subtasks ?? []).forEach(sub => renderSubtask(subtask, item.id, sub));
+
+    const subInput = document.createElement('input');
+    subInput.type = 'text';
+    subInput.className = 'subtask-text';
+    subInput.placeholder = 'Add a sub-task';
+    subInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            addSubtask(subtask, item.id, subInput);
+        }
+    });
+
+    const subAddBtn = document.createElement('button');
+    subAddBtn.className = 'subtask-add-btn';
+    subAddBtn.textContent = '+';
+    subAddBtn.addEventListener('click', function () {
+        addSubtask(subtask, item.id, subInput);
+    });
+
+    li.append(checkbox, label, deleteBtn, subtask, subInput, subAddBtn);
     list.appendChild(li);
     ItemCounter();
+}
+
+function renderSubtask(subtask, todoId, sub) {
+    const li = document.createElement('li');
+
+    // Sub-tasks have their own ids, so use another prefix to not clash with the todo checkboxes
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `subcheck${sub.id}`;
+    checkbox.checked = sub.done;
+    checkbox.addEventListener('change', function () {
+        api(`/${todoId}/subtasks/${sub.id}`, { method: 'PATCH', body: JSON.stringify({ done: this.checked }) })
+            .catch(showError);
+    });
+
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.dataset.content = sub.text;
+    label.textContent = sub.text;
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'subtask-delete-btn';
+    deleteBtn.textContent = 'X';
+    deleteBtn.addEventListener('click', async function () {
+        try {
+            await api(`/${todoId}/subtasks/${sub.id}`, { method: 'DELETE' });
+            li.remove();
+        } catch (error) {
+            showError(error);
+        }
+    });
+
+    li.append(checkbox, label, deleteBtn);
+    subtask.appendChild(li);
+}
+
+async function addSubtask(subtask, todoId, input) {
+    const text = input.value.trim();
+    input.value = '';
+    if (text === '') {
+        window.alert('Please enter a sub-task');
+        return;
+    }
+    try {
+        const sub = await api(`/${todoId}/subtasks`, { method: 'POST', body: JSON.stringify({ text }) });
+        renderSubtask(subtask, todoId, sub);
+    } catch (error) {
+        showError(error);
+    }
 }
 
 async function addItemInList() {
@@ -142,7 +212,8 @@ function showError(error) {
 }
 
 window.addEventListener('keydown', function (event) {
-    if (event.key === 'Enter') {
+    // Only the main input adds a todo, the sub-task inputs have their own Enter handler
+    if (event.key === 'Enter' && event.target.id === 'todo_text') {
         addItemInList();
     }
 });
