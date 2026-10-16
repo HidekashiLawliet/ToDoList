@@ -330,23 +330,37 @@ refresh.addEventListener('click', function () {
         window.alert('Please enter a city name');
         return;
     }
-    console.log(city_name);
-    console.log('refresh clicked');
     fetch('https://api.openweathermap.org/data/2.5/weather?q=' + city_name + '&appid=f5436b6a8bb258c06f5922c0752e2215&units=metric')
         .then(response => response.json())
         .then(data => {
             console.log(data);
             var T_cityValue = data['main']['temp'];
             var windValue = data['wind']['speed'];
-            var humidity = data['main']['humidity'];
+            var humidityValue = data['main']['humidity'];
             var descriptionValue = data['weather']['0']['description'];
 
             T_city.innerHTML = T_cityValue += ' °C';
-            humidity.innerHTML = humidity += ' % (humidity)';
+            humidity.innerHTML = humidityValue += ' % (humidity)';
             wind.innerHTML = 'wind speed: ' + windValue + ' Km/h (wind speed)';
             description.innerHTML = descriptionValue;
         })
 
 })
+window.addEventListener('load', (event) => {
+    fetch('https://api.openweathermap.org/data/2.5/weather?q=tokyo&appid=f5436b6a8bb258c06f5922c0752e2215&units=metric')
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            var T_cityValue = data['main']['temp'];
+            var windValue = data['wind']['speed'];
+            var humidityValue = data['main']['humidity'];
+            var descriptionValue = data['weather']['0']['description'];
 
+            T_city.innerHTML = T_cityValue += ' °C';
+            humidity.innerHTML = humidityValue += ' % (humidity)';
+            wind.innerHTML = 'wind speed: ' + windValue + ' Km/h (wind speed)';
+            description.innerHTML = descriptionValue;
+        })
+
+})
 // * -------------------
