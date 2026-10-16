@@ -317,55 +317,36 @@ document.getElementById('resetBtn').addEventListener('click', resetTimer);
 var W_city = document.querySelector('.W_city')
 var T_city = document.querySelector('.T_city')
 var wind = document.querySelector('.wind')
+var humidity = document.querySelector('.humidity')
 var description = document.querySelector('.description')
 var refresh = document.querySelector('.refresh')
 
 
+
+
 refresh.addEventListener('click', function () {
-    fetch('https://api.openweathermap.org/data/2.5/weather?q=' + name + '&appid=f5436b6a8bb258c06f5922c0752e2215&units=metric')
+    var city_name = W_city.value;
+    if (city_name === '') {
+        window.alert('Please enter a city name');
+        return;
+    }
+    console.log(city_name);
+    console.log('refresh clicked');
+    fetch('https://api.openweathermap.org/data/2.5/weather?q=' + city_name + '&appid=f5436b6a8bb258c06f5922c0752e2215&units=metric')
         .then(response => response.json())
         .then(data => {
-            console.log(W_city)
-            var W_cityValue = data['name'];
+            console.log(data);
             var T_cityValue = data['main']['temp'];
             var windValue = data['wind']['speed'];
-            var humidityValue = data['main']['humidity'];
+            var humidity = data['main']['humidity'];
             var descriptionValue = data['weather']['0']['description'];
 
-            W_city.innerHTML = W_cityValue;
-            T_city.innerHTML = T_cityValue;
-            humidity.innerHTML = humidityValue;
-            wind.innerHTML = windValue;
+            T_city.innerHTML = T_cityValue += ' °C';
+            humidity.innerHTML = humidity += ' % (humidity)';
+            wind.innerHTML = 'wind speed: ' + windValue + ' Km/h (wind speed)';
             description.innerHTML = descriptionValue;
-
-            T_city.innerHTML += ' °C';
-            wind.innerHTML += ' Km/h (wind speed)';
-            humidity.innerHTML += ' % (humidity)';
         })
+
 })
-
-window.addEventListener("load", (event) => {
-    fetch('https://api.openweathermap.org/data/2.5/weather?q=' + name + '&appid=f5436b6a8bb258c06f5922c0752e2215&units=metric')
-        .then(response => response.json())
-        .then(data => {
-            console.log(W_city)
-            var W_cityValue = data['name'];
-            var T_cityValue = data['main']['temp'];
-            var windValue = data['wind']['speed'];
-            var humidityValue = data['main']['humidity'];
-            var descriptionValue = data['weather']['0']['description'];
-
-            W_city.innerHTML = W_cityValue;
-            T_city.innerHTML = T_cityValue;
-            humidity.innerHTML = humidityValue;
-            wind.innerHTML = windValue;
-            description.innerHTML = descriptionValue;
-
-            T_city.innerHTML += ' °C';
-            wind.innerHTML += ' Km/h (wind speed)';
-            humidity.innerHTML += ' % (humidity)';
-        })
-});
-
 
 // * -------------------
