@@ -219,6 +219,9 @@ window.addEventListener('keydown', function (event) {
 });
 
 async function deleteAll() {
+    if (!confirm('Are you sure you want to delete all tasks?')) {
+        return;
+    }
     try {
         const items = await api();
         await Promise.all(items.map(item => api(`/${item.id}`, { method: 'DELETE' })));
