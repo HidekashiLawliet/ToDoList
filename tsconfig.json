@@ -1,0 +1,13 @@
+{
+    // Node runs server.ts directly by stripping the types, tsc is only used to check them (npm run typecheck)
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "nodenext",
+        "strict": true,
+        "noEmit": true,
+        "erasableSyntaxOnly": true,
+        "verbatimModuleSyntax": true,
+        "skipLibCheck": true
+    },
+    "include": ["server.ts"]
+}

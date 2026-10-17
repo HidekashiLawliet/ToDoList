@@ -1,9 +1,0 @@
-{
-    "tasks": [
-        {
-            "id": 1,
-            "description": "This is the first task",
-            "completed": false
-        }
-    ]
-}
