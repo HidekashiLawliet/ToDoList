@@ -1,37 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>ToDo List</title>
+        <meta name="description" content="A ToDo list with sub-tasks, a Pomodoro focus timer and a weather widget.">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Tiny inline icon: no extra request for /favicon.ico -->
+        <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Ctext%20y=%27.9em%27%20font-size=%2790%27%3E%E2%9C%85%3C/text%3E%3C/svg%3E">
         <link rel="stylesheet" href="index.css">
     </head>
 
     <body class="container">
         <header id="header">
-            <h1 id="title">&#12644;</h1>
+            <!-- The visible text is typed by index.js, so the real title is given to screen readers here -->
+            <h1 id="title" aria-label="Stay focused and productive!">&#12644;</h1>
+            <button id="motion_btn" type="button">Pause animations</button>
         </header>
-        <video id="bg_video" autoplay muted loop playsinline>
+        <!-- Decorative: index.js starts it, unless the user asked for less motion or to save data -->
+        <video id="bg_video" muted loop playsinline preload="none" aria-hidden="true">
             <source src="assets/black-hole2.960x540.mp4" type="video/mp4">
         </video>
-        <section class="todo">
+        <main class="todo">
+            <h2 class="visually-hidden">Tasks</h2>
             <div id="task_card_body">
                 <div id="text_area">
-                    <input type="text" id="todo_text" placeholder="Add a task">
+                    <input type="text" id="todo_text" placeholder="Add a task" aria-label="Add a task">
                     <button id="addBtn" onclick="addItemInList()">Add new task</button>
                 </div>
                 <div id="task">
                     <ul id="scroll_list"></ul>
                 </div>
                 <div class="project_counter">
-                    <p>number of projects: <span id="project_counter">0</span></p>
+                    <p role="status">number of tasks: <span id="project_counter">0</span></p>
                     <button id="delete_all" onclick="deleteAll()">Delete all task</button>
                 </div>
             </div>
-        </section>
-        <section class="pomodoro">
+        </main>
+        <aside class="pomodoro" aria-label="Timer and weather">
             <div id="pomo_card_body">
                 <div id="pomo_text_area">
                     <h2 id="pomo_mode">Pomodoro Timer</h2>
@@ -43,23 +50,26 @@
                     <button id="resetBtn">Reset</button>
                 </div>
             </div>
-            <section class="weather">
+            <div class="weather">
                 <div id="weather_card_body">
                     <div id="weather_text_area">
-                        <p class="weather_title">Weather</p>
+                        <h2 class="weather_title">Weather</h2>
                         <div class="weather_card">
-                            <input type="text" class="W_city" id="form_city" placeholder="Enter city name. e.g., Tokyo">
-                            <p class="time">Loading...</p>
-                            <p class="T_city"> ? °C</p>
-                            <p class="description">Cloudy</p>
-                            <p class="humidity">?%</p>
-                            <p class="wind">?Km/h</p>
+                            <input type="text" class="W_city" id="form_city" placeholder="Enter city name. e.g., Tokyo" aria-label="Enter city name">
+                            <!-- role="status": screen readers announce the new values after a refresh -->
+                            <div role="status">
+                                <p class="time">Loading...</p>
+                                <p class="T_city"> ? °C</p>
+                                <p class="description">Cloudy</p>
+                                <p class="humidity">?%</p>
+                                <p class="wind">?Km/h</p>
+                            </div>
                             <button class="refresh">Refresh</button>
                         </div>
                     </div>
                 </div>
-            </section>
-        </section>
+            </div>
+        </aside>
         <script src="index.js" async defer></script>
     </body>
 

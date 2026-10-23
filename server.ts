@@ -136,28 +136,16 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 async function start() {
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS todos (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            text VARCHAR(255) NOT NULL,
-            done BOOLEAN NOT NULL DEFAULT FALSE
-        )
-    `);
-    // ON DELETE CASCADE removes a todo's sub-tasks when the todo is deleted
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS subtask (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            parent_id INT NOT NULL,
-            text VARCHAR(255) NOT NULL,
-            done BOOLEAN NOT NULL DEFAULT FALSE,
-            FOREIGN KEY (parent_id) REFERENCES todos(id) ON DELETE CASCADE
-        )
-    `);
+    // The app's user may only SELECT/INSERT/UPDATE/DELETE: the tables come from schema.sql, run by an admin.
+    // Checking both tables here makes a missing schema fail at startup instead of on the first request.
+    await pool.query('SELECT 1 FROM todos LIMIT 1');
+    await pool.query('SELECT 1 FROM subtask LIMIT 1');
     const port = process.env.PORT || 3000;
     app.listen(port, () => console.log(`ToDo List running on http://localhost:${port}`));
 }
 
 start().catch((err: Error) => {
     console.error('Could not connect to MariaDB:', err.message);
+    console.error('Has an admin run schema.sql? (mariadb -u root -p < schema.sql)');
     process.exit(1);
 });

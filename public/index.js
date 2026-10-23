@@ -36,9 +36,46 @@ function toggleTextVisibility(element, text, duration = 200) {
             timer = setTimeout(typingEffect, duration);
         }
     }
-    typingEffect();
+    return {
+        start() {
+            clearTimeout(timer);
+            i = 0;
+            // Same invisible character as in index.html, it keeps the header at its height
+            element.textContent = 'ㅤ';
+            typingEffect();
+        },
+        stop() {
+            clearTimeout(timer);
+            element.textContent = text;
+        },
+    };
 }
-toggleTextVisibility(title, titleText);
+const titleEffect = toggleTextVisibility(title, titleText);
+
+// * Animations = typing effect + background video (WCAG 2.2.2, eco-design)
+// They stay off when the system asks for less motion or the browser asks to save data,
+// and the "Pause animations" button lets anyone stop them.
+const bgVideo = document.getElementById('bg_video');
+const motionBtn = document.getElementById('motion_btn');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let animationsOn = !reduceMotion.matches && !navigator.connection?.saveData;
+
+function setAnimations(on) {
+    animationsOn = on;
+    motionBtn.textContent = on ? 'Pause animations' : 'Play animations';
+    if (on) {
+        titleEffect.start();
+        // The video is only downloaded here (preload="none"); play() fails if it can't be decoded, the page works without it
+        bgVideo.play()?.catch(() => { });
+    } else {
+        titleEffect.stop();
+        bgVideo.pause();
+    }
+}
+
+motionBtn.addEventListener('click', () => setAnimations(!animationsOn));
+reduceMotion.addEventListener('change', () => setAnimations(!reduceMotion.matches));
+setAnimations(animationsOn);
 
 // * -----------------
 
@@ -83,7 +120,8 @@ function renderItem(item) {
     label.textContent = item.text;
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.id = 'delete_btn';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.setAttribute('aria-label', `Delete task ${item.text}`);
     deleteBtn.textContent = 'X';
     deleteBtn.addEventListener('click', function () {
         deleteItem(li, item.id);
@@ -97,6 +135,7 @@ function renderItem(item) {
     subInput.type = 'text';
     subInput.className = 'subtask-text';
     subInput.placeholder = 'Add a sub-task';
+    subInput.setAttribute('aria-label', `Add a sub-task to ${item.text}`);
     subInput.addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
             addSubtask(subtask, item.id, subInput);
@@ -105,6 +144,7 @@ function renderItem(item) {
 
     const subAddBtn = document.createElement('button');
     subAddBtn.className = 'subtask-add-btn';
+    subAddBtn.setAttribute('aria-label', `Add the sub-task to ${item.text}`);
     subAddBtn.textContent = '+';
     subAddBtn.addEventListener('click', function () {
         addSubtask(subtask, item.id, subInput);
@@ -136,6 +176,10 @@ function renderSubtask(subtask, todoId, sub) {
             parentCheckbox.checked = true;
             api(`/${todoId}`, { method: 'PATCH', body: JSON.stringify({ done: true }) })
                 .catch(showError);
+        } if (cb.checkbox !== this && !cb.checked) {
+            parentCheckbox.checked = false;
+            api(`/${todoId}`, { method: 'PATCH', body: JSON.stringify({ done: false }) })
+                .catch(showError);
         }
     });
 
@@ -146,6 +190,7 @@ function renderSubtask(subtask, todoId, sub) {
 
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'subtask-delete-btn';
+    deleteBtn.setAttribute('aria-label', `Delete sub-task ${sub.text}`);
     deleteBtn.textContent = 'X';
     deleteBtn.addEventListener('click', async function () {
         try {
