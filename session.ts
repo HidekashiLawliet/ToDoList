@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto';
 
-// Sessions live in memory: restarting the server logs everybody out, which is fine for this app.
-// The browser only keeps a random token, in an HttpOnly cookie. It never holds the user's data.
+// In-memory sessions: a restart logs everybody out
 export const COOKIE_NAME = 'sid';
 const SESSION_SECONDS = 8 * 60 * 60;
 
@@ -26,7 +25,7 @@ export function createSession(userId: number, pseudonyme: string): string {
     return token;
 }
 
-// Finds one cookie in the "Cookie" header of a request, e.g. "a=1; sid=abc" -> "abc" for "sid"
+// Finds one cookie in the Cookie header, by name
 export function readCookie(header: string | undefined, name: string): string | undefined {
     for (const part of (header ?? '').split(';')) {
         const separator = part.indexOf('=');
@@ -37,7 +36,7 @@ export function readCookie(header: string | undefined, name: string): string | u
     return undefined;
 }
 
-// The session of the request, or undefined when the visitor is not logged in (no cookie, unknown token, expired)
+// The request's session, or undefined if not logged in
 export function readSession(cookieHeader: string | undefined): Session | undefined {
     const token = readCookie(cookieHeader, COOKIE_NAME);
     const session = token === undefined ? undefined : sessions.get(token);
@@ -47,13 +46,12 @@ export function readSession(cookieHeader: string | undefined): Session | undefin
     return session;
 }
 
-// HttpOnly: scripts in the page cannot read the cookie.
-// SameSite=Lax: another site cannot make the browser send it with a POST, PATCH or DELETE.
+// HttpOnly hides it from scripts; SameSite=Lax blocks cross-site posts
 export function sessionCookie(token: string, secure: boolean): string {
     return `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${SESSION_SECONDS}${secure ? '; Secure' : ''}`;
 }
 
-// Logs a visitor out: forgets the session behind the cookie of the request (nothing to do without one)
+// Forgets the session behind the request's cookie
 export function destroySession(cookieHeader: string | undefined): void {
     const token = readCookie(cookieHeader, COOKIE_NAME);
     if (token !== undefined) {

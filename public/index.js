@@ -40,7 +40,7 @@ function toggleTextVisibility(element, text, duration = 200) {
         start() {
             clearTimeout(timer);
             i = 0;
-            // Same invisible character as in index.html, it keeps the header at its height
+            // Invisible character, as in index.html, keeps header height
             element.textContent = 'ㅤ';
             typingEffect();
         },
@@ -52,9 +52,7 @@ function toggleTextVisibility(element, text, duration = 200) {
 }
 const titleEffect = toggleTextVisibility(title, titleText);
 
-// * Animations = typing effect + background video (WCAG 2.2.2, eco-design)
-// They stay off when the system asks for less motion or the browser asks to save data,
-// and the "Pause animations" button lets anyone stop them.
+// * Animations: off for reduced motion or data saving; pausable
 const bgVideo = document.getElementById('bg_video');
 const motionBtn = document.getElementById('motion_btn');
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -65,7 +63,7 @@ function setAnimations(on) {
     motionBtn.textContent = on ? 'Pause animations' : 'Play animations';
     if (on) {
         titleEffect.start();
-        // The video is only downloaded here (preload="none"); play() fails if it can't be decoded, the page works without it
+        // Video loads only here; the page works if play() fails
         bgVideo.play()?.catch(() => { });
     } else {
         titleEffect.stop();
@@ -80,7 +78,7 @@ setAnimations(animationsOn);
 // * -----------------
 
 
-// * Database (MariaDB through server.js) - start it with `npm start`
+// * Database (MariaDB via server.ts) - start with `npm start`
 const API_URL = '/todos';
 
 async function api(path = '', options = {}) {
@@ -89,7 +87,7 @@ async function api(path = '', options = {}) {
         ...options,
     });
     if (response.status === 401) {
-        // The session is over (or the server was restarted): back to the login page
+        // Session over or server restarted: back to login page
         window.location.href = '/login.html';
         throw new Error('Not logged in');
     }
@@ -163,7 +161,7 @@ function renderItem(item) {
 function renderSubtask(subtask, todoId, sub) {
     const li = document.createElement('li');
 
-    // Sub-tasks have their own ids, so use another prefix to not clash with the todo checkboxes
+    // Different prefix: sub-task ids can clash with todo checkboxes
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.id = `subcheck${sub.id}`;
@@ -172,18 +170,13 @@ function renderSubtask(subtask, todoId, sub) {
         api(`/${todoId}/subtasks/${sub.id}`, { method: 'PATCH', body: JSON.stringify({ done: this.checked }) })
             .catch(showError);
 
-        // When a sub-task is checked, check the parent todo if all its sub-tasks are done
-        if (!this.checked) return;
+        // Parent todo is done exactly when all sub-tasks are
         const allDone = Array.from(subtask.querySelectorAll('input[type="checkbox"]'))
-            .every(cb => cb.checked);
+            .every(box => box.checked);
         const parentCheckbox = document.getElementById(`checkbox${todoId}`);
-        if (allDone && !parentCheckbox.checked) {
-            parentCheckbox.checked = true;
-            api(`/${todoId}`, { method: 'PATCH', body: JSON.stringify({ done: true }) })
-                .catch(showError);
-        } if (cb.checkbox !== this && !cb.checked) {
-            parentCheckbox.checked = false;
-            api(`/${todoId}`, { method: 'PATCH', body: JSON.stringify({ done: false }) })
+        if (parentCheckbox.checked !== allDone) {
+            parentCheckbox.checked = allDone;
+            api(`/${todoId}`, { method: 'PATCH', body: JSON.stringify({ done: allDone }) })
                 .catch(showError);
         }
     });
@@ -278,7 +271,7 @@ function showError(error) {
 }
 
 window.addEventListener('keydown', function (event) {
-    // Only the main input adds a todo, the sub-task inputs have their own Enter handler
+    // Main input only; sub-tasks have their own Enter handler
     if (event.key === 'Enter' && event.target.id === 'todo_text') {
         addItemInList();
     }
@@ -300,7 +293,7 @@ async function deleteAll() {
 
 // * -------------------
 
-// * Pomodoro timer: 30 min of focus, then 5 min of break, and so on
+// * Pomodoro timer: 30 min focus, 5 min break, repeat
 const FOCUS_MINUTES = 30;
 const BREAK_MINUTES = 5;
 
@@ -319,7 +312,7 @@ function showTime() {
 }
 
 function tick() {
-    // Based on the clock so the timer stays right even when the tab is in the background
+    // Clock-based, so background tabs keep correct time
     secondsLeft = Math.max(0, Math.round((endTime - Date.now()) / 1000));
     showTime();
     if (secondsLeft === 0) {
@@ -339,7 +332,7 @@ function startTimer() {
     if (!isBreak && pomoMode.textContent === 'Pomodoro Timer') {
         pomoMode.textContent = 'Focus time';
     }
-    // * Browsers only allow sound after a click, so prepare the audio now
+    // * Sound needs a click first, so prepare audio now
     audio ??= new AudioContext();
     audio.resume();
     endTime = Date.now() + secondsLeft * 1000;
@@ -365,7 +358,7 @@ function beep(count = 3, length = 0.5, gap = 0.5) {
     audio ??= new AudioContext();
     const firstBeep = audio.currentTime + 0.05;
     for (let i = 0; i < count; i++) {
-        // An oscillator can only be started once, so each beep needs its own
+        // Oscillators start once, so each beep needs its own
         const oscillator = audio.createOscillator();
         oscillator.frequency.value = 600;
         oscillator.connect(audio.destination);
@@ -392,7 +385,7 @@ var time = document.querySelector('.time')
 var refresh = document.querySelector('.refresh')
 
 
-// * The key lives in .env, so server.js calls OpenWeather
+// * The key lives in .env, so server.ts calls OpenWeather
 async function showWeather(city_name) {
     try {
         const response = await fetch('/weather?city=' + encodeURIComponent(city_name));

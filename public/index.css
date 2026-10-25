@@ -1,9 +1,9 @@
 :root {
-    /* Dark layer under every card and the header: the text stays readable whatever the video shows */
+    /* Dark layer keeps text readable over the video */
     --scrim: rgba(0, 0, 0, 0.65);
-    /* Light purple for the text that used to be dark purple (2:1 contrast on the dark video) */
+    /* Light purple: dark purple gave only 2:1 contrast */
     --accent-text: #e3d3ff;
-    /* Every colour of this gradient keeps white text at 4.5:1 or more, also while hovering */
+    /* Gradient keeps white text at 4.5:1 contrast, hover included */
     --btn-gradient: linear-gradient(to right, #6253e1, #852D91, #6f5ae0, #d32f2f);
 }
 
@@ -21,7 +21,7 @@ body {
 
 .container {
     display: grid;
-    /* minmax(0, 1fr): a long word in a task can't stretch the column wider than the screen */
+    /* minmax(0, 1fr): long words cannot stretch the column */
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
         "header header"
@@ -54,13 +54,13 @@ body {
     white-space: nowrap;
 }
 
-/* Keyboard focus must always be visible (the old "outline: none" rules are gone) */
+/* Keyboard focus must stay visible: no "outline: none" */
 :focus-visible {
     outline: 3px solid #fff;
     outline-offset: 2px;
 }
 
-/* The browser's grey placeholder is too pale on the dark cards */
+/* Browser's grey placeholder is too pale on dark cards */
 ::placeholder {
     color: #dccff5;
     font-style: italic;
@@ -132,7 +132,7 @@ body {
     margin: 0;
 }
 
-/* Lets anyone stop the video and the typing effect (WCAG 2.2.2) */
+/* Lets anyone stop video and typing effect (WCAG 2.2.2) */
 #motion_btn,
 #logout_btn {
     margin-left: auto;
@@ -389,7 +389,7 @@ label {
     font-weight: 600;
     padding-left: 1rem;
     user-select: none;
-    /* A very long word or URL wraps instead of pushing the layout out of the screen */
+    /* Long words and URLs wrap instead of overflowing */
     overflow-wrap: anywhere;
     min-width: 0;
 
@@ -513,7 +513,7 @@ label {
     color: white;
     border-radius: 5px;
     border: 5px solid #00000000;
-    box-shadow: inset 0 0 0 2px #ffffff00;
+    box-shadow: inset 0 0 0 1px #ffffff80;
     background-color: rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(6px);
 }
@@ -592,7 +592,7 @@ label {
     gap: 0.5rem;
 }
 
-/* The global label rule is made for the task list (big, bold, struck through when done) */
+/* Undoes the task-list label style (big, bold, struck through) */
 #login_form label {
     padding-left: 0;
     font-size: 1rem;
@@ -632,7 +632,7 @@ label {
     background-position: 100% 0;
 }
 
-/* "Create Account" / "Back to login": a quieter outline button under the form */
+/* Quieter outline button: "Create Account" / "Back to login" */
 #login_card_body button.secondary {
     margin-top: 0;
     background-image: none;
@@ -644,14 +644,14 @@ label {
     background-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Rule of the password, shown under its field when creating an account */
+/* Password rule, shown under its field when signing up */
 #password_hint {
     margin: 0;
     font-size: 0.875rem;
     color: var(--accent-text);
 }
 
-/* Phones: this block is at the end of the file so it wins over the desktop rules above */
+/* Phones: kept last so it overrides the desktop rules */
 @media (max-width: 800px) {
 
     /* The title and the pause button stack on two lines */
@@ -664,7 +664,7 @@ label {
     #header #title {
         margin-left: 0;
         font-size: 1.5rem;
-        /* room for two lines while the title is being typed, so the button doesn't jump */
+        /* Room for two lines, so the button doesn't jump */
         min-height: 2.4em;
     }
 
@@ -676,7 +676,7 @@ label {
         margin-left: 0;
     }
 
-    /* Smaller margins so the cards use the width of the phone */
+    /* Smaller margins: cards use the full phone width */
     #task_card_body,
     #pomo_card_body,
     #weather_card_body {
@@ -687,7 +687,7 @@ label {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    /* The timer card follows the screen width and its buttons wrap if needed (320px phones) */
+    /* Timer card fits the screen; buttons wrap (320px phones) */
     #pomo_card_body {
         width: auto;
     }
@@ -719,7 +719,7 @@ label {
     }
 }
 
-/* Respect the "reduce motion" setting of the system (the video and the typing effect are handled in index.js) */
+/* Honours "reduce motion"; index.js handles video and typing */
 @media (prefers-reduced-motion: reduce) {
 
     *,

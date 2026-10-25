@@ -78,10 +78,11 @@ INSERT INTO todo.users (pseudonyme, hashed_password) VALUES ('alice', 'paste-the
 
 ## Database and permissions
 
-The database, the `todos`, `subtask` and `users` tables and the app's user are created by [schema.sql](schema.sql), **run once by an admin**:
+The database and the `todos`, `subtask` and `users` tables are created by [schema.sql](schema.sql), and the app's user by [create_user.example.sql](create_user.example.sql) (copied to `create_user.local.sql`, which Git ignores, so the password stays out of the repository). Both are **run once by an admin**, see [step 6](#6-create-the-database-the-tables-and-the-apps-user-admin) below:
 
 ```bash
 mariadb -u root -p < schema.sql
+mariadb -u root -p < create_user.local.sql
 ```
 
 The app connects as `todo_user`, which only has `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the `todo` database (principle of least privilege). It cannot create, alter or drop tables, so the server never creates the schema itself: it only checks at startup that the tables exist.
@@ -154,17 +155,27 @@ cd ToDoList
 
 ### 6. Create the database, the tables and the app's user (admin)
 
-This step is done **as the MariaDB admin (`root`)**, with [schema.sql](schema.sql).
+This step is done **as the MariaDB admin (`root`)**, with two files:
 
-1. Open `schema.sql` and replace `'change_me'` with a real password for `todo_user`.
-2. Run it from the project folder and enter the root password:
+- [schema.sql](schema.sql) creates the database and the tables. It holds no password: run it as it is.
+- [create_user.example.sql](create_user.example.sql) creates the app's user `todo_user`. It is a template: the copy you edit, `create_user.local.sql`, is ignored by Git, so your password is never committed.
+
+1. Copy the template, then open the copy and replace `'change_me'` with a real password. You will put the same one in `.env` (step 8):
+
+   ```bash
+   cp create_user.example.sql create_user.local.sql        # Git Bash / macOS / Linux
+   copy create_user.example.sql create_user.local.sql      # Windows cmd / PowerShell
+   ```
+
+2. Run both files from the project folder, in this order, and enter the root password each time:
 
    ```bash
    mariadb -u root -p < schema.sql
+   mariadb -u root -p < create_user.local.sql
    ```
 
-   In PowerShell, `<` does not work, use: `Get-Content schema.sql | mariadb -u root -p`.
-   If `mariadb` is not found, open the **MySQL Client (MariaDB)** shortcut from the Start menu and type `source C:/path/to/ToDoList/schema.sql`.
+   In PowerShell, `<` does not work, use: `Get-Content schema.sql | mariadb -u root -p` (and the same with `create_user.local.sql`).
+   If `mariadb` is not found, open the **MySQL Client (MariaDB)** shortcut from the Start menu and type `source C:/path/to/ToDoList/schema.sql` then `source C:/path/to/ToDoList/create_user.local.sql`.
 
 3. Check the user's rights:
 
@@ -173,6 +184,8 @@ This step is done **as the MariaDB admin (`root`)**, with [schema.sql](schema.sq
    ```
 
    You should only see `GRANT SELECT, INSERT, UPDATE, DELETE ON todo.* ...` (plus the `USAGE` line, which means "can log in").
+
+To change the password later, edit `create_user.local.sql`, run it again, and update `DB_PASSWORD` in `.env`.
 
 ### 7. Install the dependencies
 
@@ -196,7 +209,7 @@ Then edit `.env` with the values from steps 4 and 6:
 ```env
 DB_HOST=localhost
 DB_USER=todo_user
-DB_PASSWORD=the_password_you_put_in_schema.sql
+DB_PASSWORD=the_password_you_put_in_create_user.local.sql
 DB_NAME=todo
 PORT=3000
 WEATHER_API_KEY=your_openweathermap_key
@@ -221,12 +234,12 @@ Open <http://localhost:3000> in your browser, click **Create Account** to make y
 | Problem                                        | Fix                                                                                      |
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `Could not connect to MariaDB: ...`            | Check MariaDB is running (Windows _Services_ → MariaDB) and the `DB_*` values in `.env`. |
-| `Access denied for user`                       | Wrong `DB_USER` / `DB_PASSWORD` in `.env`, or `schema.sql` was not run (step 6).         |
+| `Access denied for user`                       | Wrong `DB_USER` / `DB_PASSWORD` in `.env`, or `create_user.local.sql` was not run (step 6). |
 | `Unknown database 'todo'` / `Table ... doesn't exist` | An admin must run `schema.sql` (step 6).                                          |
 | `... command denied to user 'todo_user'`       | Expected for anything other than SELECT/INSERT/UPDATE/DELETE: do it as root.             |
 | Logged in but the task list is empty           | Tasks are per user: older tasks have no owner yet, see the upgrade SQL in the Database section. |
 | `SyntaxError` / `Unknown file extension ".ts"` | Your Node.js is too old: install 22.18 or newer (step 2).                                |
 | `EADDRINUSE`                                   | Port 3000 is already used: stop the other program or change `PORT` in `.env`.            |
 | Weather shows an error / `401`                 | API key missing, wrong, or not activated yet (step 4).                                   |
-| Login always says "Wrong username or password" | The `hashed_password` column must be a bcrypt hash and the pseudonyme must match (Login). |
+| Login always says "Wrong pseudonyme or password" | The `hashed_password` column must be a bcrypt hash and the pseudonyme must match (Login). |
 | Sent back to the login page by itself          | Normal after a server restart or 8 hours: sessions are kept in memory.                   |

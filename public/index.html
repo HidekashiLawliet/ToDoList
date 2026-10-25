@@ -14,17 +14,17 @@
 
     <body class="container">
         <header id="header">
-            <!-- The visible text is typed by index.js, so the real title is given to screen readers here -->
+            <!-- index.js types the visible text; screen readers use aria-label -->
             <h1 id="title" aria-label="Stay focused and productive!">&#12644;</h1>
             <div id="header_actions">
                 <button id="motion_btn" type="button">Pause animations</button>
-                <!-- A plain form: the browser posts it, index.js has nothing to do with it -->
+                <!-- Plain form posted by the browser; no JavaScript -->
                 <form id="logout_form" action="/userlogout" method="POST">
                     <button id="logout_btn" type="submit">Log out</button>
                 </form>
             </div>
         </header>
-        <!-- Decorative: index.js starts it, unless the user asked for less motion or to save data -->
+        <!-- Decorative: index.js skips it for reduced motion or data saving -->
         <video id="bg_video" muted loop playsinline preload="none" aria-hidden="true">
             <source src="assets/black-hole2.960x540.mp4" type="video/mp4">
         </video>

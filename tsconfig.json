@@ -1,5 +1,5 @@
 {
-    // Node runs server.ts directly by stripping the types, tsc is only used to check them (npm run typecheck)
+    // Node strips types and runs server.ts; tsc only checks
     "compilerOptions": {
         "target": "esnext",
         "module": "nodenext",

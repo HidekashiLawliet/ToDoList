@@ -20,10 +20,9 @@
                     <h1 id="login_title">Login</h1>
                     <p id="login_subtitle">Please enter your credentials to access your tasks.</p>
                 </div>
-                <!-- Shown by the script below when the server sends the browser back here with ?error=... -->
+                <!-- Filled by the script when the URL has ?error=... -->
                 <p id="login_error" role="alert" hidden></p>
-                <!-- One form for both jobs: the script below switches it between "Login" (POST /userlogin)
-                     and "Create Account" (POST /userregister), which also needs the confirm password field. -->
+                <!-- One form, two modes: Login or Create Account -->
                 <form id="login_form" action="/userlogin" method="POST">
                     <label for="username">Pseudonyme:</label>
                     <input type="text" id="username" name="username" maxlength="50" autocomplete="username" required>
@@ -32,14 +31,13 @@
                     <input type="password" id="password" name="password" autocomplete="current-password" required>
                     <p id="password_hint" hidden>8 to 72 characters.</p>
 
-                    <!-- Hidden and disabled while logging in, so it is neither shown, checked nor sent -->
+                    <!-- Disabled while logging in: not shown, checked or sent -->
                     <label for="confirm_password" id="confirm_label" hidden>Confirm password:</label>
                     <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required disabled hidden>
 
                     <button type="submit" id="submit_btn">Login</button>
                 </form>
-                <!-- Outside the form on purpose: type="button" only switches the form between its two modes (script below),
-                     it never submits anything. A submit button outside a form would do nothing at all. -->
+                <!-- Outside the form: only switches modes, never submits -->
                 <button type="button" id="switch_btn" class="secondary">Create Account</button>
             </div>
         </main>
@@ -52,8 +50,10 @@
             };
             const errorBox = document.getElementById('login_error');
 
-            // Fixed texts for the codes the server puts in the URL: nothing from the URL is ever written in the page
-            const LOGIN_ERROR = 'Wrong pseudonyme or password.';
+            // Fixed messages per code; URL text is never displayed
+            const LOGIN_ERRORS = {
+                1: 'Wrong pseudonyme or password.'
+            };
             const REGISTER_ERRORS = {
                 pseudonyme: 'The pseudonyme must have 3 to 50 characters.',
                 password: 'The password must have 8 to 72 characters.',
@@ -71,7 +71,7 @@
                 document.getElementById('submit_btn').textContent = registering ? 'Create Account' : 'Login';
                 document.getElementById('switch_btn').textContent = registering ? 'Back to login' : 'Create Account';
 
-                // Same limits as the server (register.ts); when logging in, old accounts must still be able to enter
+                // Same limits as register.ts, applied only when creating accounts
                 fields.password.autocomplete = registering ? 'new-password' : 'current-password';
                 const limits = [[fields.username, 'minlength', '3'], [fields.password, 'minlength', '8'],
                     [fields.password, 'maxlength', '72'], [fields.password, 'aria-describedby', 'password_hint']];
@@ -92,7 +92,7 @@
                 errorBox.hidden = true;
             }
 
-            // The browser tells the user about the mismatch before anything is sent (the server checks again)
+            // Browser flags a mismatch early; the server checks again
             function checkSamePassword() {
                 const different = !fields.confirm.disabled && fields.confirm.value !== fields.password.value;
                 fields.confirm.setCustomValidity(different ? 'The two passwords are different.' : '');
@@ -106,7 +106,7 @@
                 (firstEmpty || fields.username).focus();
             });
 
-            // The server sends the browser back here after a failure: ?error=1 (login) or ?register&error=<code>
+            // Failures return as ?error=<code> or ?register&error=<code>
             const params = new URLSearchParams(window.location.search);
             const registering = params.has('register');
             if (registering) {
@@ -114,11 +114,10 @@
             }
             if (params.has('error')) {
                 const code = params.get('error');
+                const messages = registering ? REGISTER_ERRORS : LOGIN_ERRORS;
                 let message = 'Something went wrong, please try again.';
-                if (!registering) {
-                    message = LOGIN_ERROR;
-                } else if (Object.hasOwn(REGISTER_ERRORS, code)) { // hasOwn: "constructor" must not match Object.prototype
-                    message = REGISTER_ERRORS[code];
+                if (Object.hasOwn(messages, code)) { // hasOwn: "constructor" must not match Object.prototype
+                    message = messages[code];
                 }
                 errorBox.textContent = message;
                 errorBox.hidden = false;
