@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readDone, readText, TEXT_MAX } from './todoInput.ts';
+import { readDone, readId, readText, TEXT_MAX } from './todoInput.ts';
 
 test('text: a normal text is kept', () => {
     assert.equal(readText('Buy milk'), 'Buy milk');
@@ -55,5 +55,17 @@ test('done: anything else is refused, even the string "false"', () => {
     for (const value of ['false', 'true', 0, 1, null, [], {}]) {
         assert.equal(readDone(value), null);
         assert.equal(readDone(value, false), null);
+    }
+});
+
+test('id: a positive whole number written with digits only', () => {
+    assert.equal(readId('1'), 1);
+    assert.equal(readId('42'), 42);
+    assert.equal(readId('2147483647'), 2147483647);
+});
+
+test('id: anything else is refused, even "1abc" that MariaDB reads as 1', () => {
+    for (const value of ['0', '-1', '01', '1abc', 'abc', '1.5', ' 1', '', '1e3', '99999999999999999999', undefined, 1, null, ['1']]) {
+        assert.equal(readId(value), null);
     }
 });
