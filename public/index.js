@@ -88,6 +88,11 @@ async function api(path = '', options = {}) {
         headers: { 'Content-Type': 'application/json' },
         ...options,
     });
+    if (response.status === 401) {
+        // The session is over (or the server was restarted): back to the login page
+        window.location.href = '/login.html';
+        throw new Error('Not logged in');
+    }
     if (!response.ok) {
         throw new Error(`Request failed: ${response.status}`);
     }
@@ -264,6 +269,10 @@ function ItemCounter() {
 }
 
 function showError(error) {
+    // The page is already leaving for the login page
+    if (error.message === 'Not logged in') {
+        return;
+    }
     console.error(error);
     window.alert('Could not reach the database. Is `npm start` running?');
 }
@@ -387,6 +396,10 @@ var refresh = document.querySelector('.refresh')
 async function showWeather(city_name) {
     try {
         const response = await fetch('/weather?city=' + encodeURIComponent(city_name));
+        if (response.status === 401) {
+            window.location.href = '/login.html';
+            return;
+        }
         const data = await response.json();
         if (!response.ok) {
             window.alert('Weather error: ' + (data.message ?? data.error));
@@ -408,7 +421,7 @@ async function showWeather(city_name) {
         description.textContent = data.weather[0].description;
     } catch (error) {
         console.error(error);
-        window.alert('Could not reach the weather service. Is `npm start` running?');
+        window.alert('Could not reach the weather service. Check your API key in the .env');
     }
 }
 

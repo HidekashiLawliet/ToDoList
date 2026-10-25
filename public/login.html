@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Login - ToDo List</title>
+        <meta name="description" content="A ToDo list with sub-tasks, a Pomodoro focus timer and a weather widget.">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Tiny inline icon: no extra request for /favicon.ico -->
+        <link rel="icon"
+            href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Ctext%20y=%27.9em%27%20font-size=%2790%27%3E%E2%9C%85%3C/text%3E%3C/svg%3E">
+        <link rel="stylesheet" href="index.css">
+    </head>
+
+    <body class="login-page">
+        <main class="login">
+            <div id="login_card_body">
+                <div id="login_text_area">
+                    <h1 id="login_title">Login</h1>
+                    <p id="login_subtitle">Please enter your credentials to access your tasks.</p>
+                </div>
+                <!-- Shown by the script below when the server sends the browser back here with ?error=... -->
+                <p id="login_error" role="alert" hidden></p>
+                <!-- One form for both jobs: the script below switches it between "Login" (POST /userlogin)
+                     and "Create Account" (POST /userregister), which also needs the confirm password field. -->
+                <form id="login_form" action="/userlogin" method="POST">
+                    <label for="username">Pseudonyme:</label>
+                    <input type="text" id="username" name="username" maxlength="50" autocomplete="username" required>
+
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                    <p id="password_hint" hidden>8 to 72 characters.</p>
+
+                    <!-- Hidden and disabled while logging in, so it is neither shown, checked nor sent -->
+                    <label for="confirm_password" id="confirm_label" hidden>Confirm password:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required disabled hidden>
+
+                    <button type="submit" id="submit_btn">Login</button>
+                </form>
+                <!-- Outside the form on purpose: type="button" only switches the form between its two modes (script below),
+                     it never submits anything. A submit button outside a form would do nothing at all. -->
+                <button type="button" id="switch_btn" class="secondary">Create Account</button>
+            </div>
+        </main>
+        <script>
+            const form = document.getElementById('login_form');
+            const fields = {
+                username: document.getElementById('username'),
+                password: document.getElementById('password'),
+                confirm: document.getElementById('confirm_password')
+            };
+            const errorBox = document.getElementById('login_error');
+
+            // Fixed texts for the codes the server puts in the URL: nothing from the URL is ever written in the page
+            const LOGIN_ERROR = 'Wrong pseudonyme or password.';
+            const REGISTER_ERRORS = {
+                pseudonyme: 'The pseudonyme must have 3 to 50 characters.',
+                password: 'The password must have 8 to 72 characters.',
+                mismatch: 'The two passwords are different.',
+                exists: 'This pseudonyme is already taken.'
+            };
+
+            function setMode(registering) {
+                form.action = registering ? '/userregister' : '/userlogin';
+                document.title = (registering ? 'Create account' : 'Login') + ' - ToDo List';
+                document.getElementById('login_title').textContent = registering ? 'Create account' : 'Login';
+                document.getElementById('login_subtitle').textContent = registering
+                    ? 'Choose a pseudonyme and a password to create your account.'
+                    : 'Please enter your credentials to access your tasks.';
+                document.getElementById('submit_btn').textContent = registering ? 'Create Account' : 'Login';
+                document.getElementById('switch_btn').textContent = registering ? 'Back to login' : 'Create Account';
+
+                // Same limits as the server (register.ts); when logging in, old accounts must still be able to enter
+                fields.password.autocomplete = registering ? 'new-password' : 'current-password';
+                const limits = [[fields.username, 'minlength', '3'], [fields.password, 'minlength', '8'],
+                    [fields.password, 'maxlength', '72'], [fields.password, 'aria-describedby', 'password_hint']];
+                for (const [field, name, value] of limits) {
+                    if (registering) {
+                        field.setAttribute(name, value);
+                    } else {
+                        field.removeAttribute(name);
+                    }
+                }
+                document.getElementById('password_hint').hidden = !registering;
+
+                document.getElementById('confirm_label').hidden = !registering;
+                fields.confirm.hidden = !registering;
+                fields.confirm.disabled = !registering;
+                fields.confirm.value = '';
+                fields.confirm.setCustomValidity('');
+                errorBox.hidden = true;
+            }
+
+            // The browser tells the user about the mismatch before anything is sent (the server checks again)
+            function checkSamePassword() {
+                const different = !fields.confirm.disabled && fields.confirm.value !== fields.password.value;
+                fields.confirm.setCustomValidity(different ? 'The two passwords are different.' : '');
+            }
+            fields.password.addEventListener('input', checkSamePassword);
+            fields.confirm.addEventListener('input', checkSamePassword);
+
+            document.getElementById('switch_btn').addEventListener('click', () => {
+                setMode(fields.confirm.disabled);
+                const firstEmpty = [fields.username, fields.password, fields.confirm].find(f => !f.hidden && f.value === '');
+                (firstEmpty || fields.username).focus();
+            });
+
+            // The server sends the browser back here after a failure: ?error=1 (login) or ?register&error=<code>
+            const params = new URLSearchParams(window.location.search);
+            const registering = params.has('register');
+            if (registering) {
+                setMode(true);
+            }
+            if (params.has('error')) {
+                const code = params.get('error');
+                let message = 'Something went wrong, please try again.';
+                if (!registering) {
+                    message = LOGIN_ERROR;
+                } else if (Object.hasOwn(REGISTER_ERRORS, code)) { // hasOwn: "constructor" must not match Object.prototype
+                    message = REGISTER_ERRORS[code];
+                }
+                errorBox.textContent = message;
+                errorBox.hidden = false;
+            }
+        </script>
+    </body>
+
+</html>

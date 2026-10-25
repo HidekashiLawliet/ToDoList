@@ -16,7 +16,13 @@
         <header id="header">
             <!-- The visible text is typed by index.js, so the real title is given to screen readers here -->
             <h1 id="title" aria-label="Stay focused and productive!">&#12644;</h1>
-            <button id="motion_btn" type="button">Pause animations</button>
+            <div id="header_actions">
+                <button id="motion_btn" type="button">Pause animations</button>
+                <!-- A plain form: the browser posts it, index.js has nothing to do with it -->
+                <form id="logout_form" action="/userlogout" method="POST">
+                    <button id="logout_btn" type="submit">Log out</button>
+                </form>
+            </div>
         </header>
         <!-- Decorative: index.js starts it, unless the user asked for less motion or to save data -->
         <video id="bg_video" muted loop playsinline preload="none" aria-hidden="true">

@@ -119,8 +119,22 @@ body {
     color: rgb(255, 255, 255);
 }
 
+/* The two buttons on the right of the header */
+#header_actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+#logout_form {
+    margin: 0;
+}
+
 /* Lets anyone stop the video and the typing effect (WCAG 2.2.2) */
-#motion_btn {
+#motion_btn,
+#logout_btn {
     margin-left: auto;
     flex-shrink: 0;
     font-size: 16px;
@@ -528,6 +542,115 @@ label {
     border-bottom: 2px solid #2e2e2e;
 }
 
+/* * LOGIN PAGE (login.html) * */
+.login-page {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+}
+
+#login_card_body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-sizing: border-box;
+    width: min(24rem, calc(100vw - 2rem));
+    padding: 1.5rem 2rem 2rem;
+    border-radius: 10px;
+    border: 2px solid rgb(0, 0, 0);
+    background-color: var(--scrim);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+#login_title {
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: normal;
+    border-bottom: 2px solid #2e2e2e;
+}
+
+#login_subtitle {
+    margin: 0;
+    color: var(--accent-text);
+}
+
+/* Dark red on white: readable whatever is behind the card */
+#login_error {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #8a0f1f;
+    font-weight: 600;
+}
+
+#login_form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* The global label rule is made for the task list (big, bold, struck through when done) */
+#login_form label {
+    padding-left: 0;
+    font-size: 1rem;
+    font-weight: normal;
+    cursor: default;
+    user-select: auto;
+}
+
+#login_form input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.35);
+    box-shadow: inset 0 0 0 1px #ffffff80;
+}
+
+#login_card_body button {
+    margin-top: 1rem;
+    height: 3rem;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+    border: none;
+    border-radius: 50px;
+    background-image: var(--btn-gradient);
+    background-size: 300% 100%;
+    box-shadow: 0 4px 15px 0 rgba(126, 52, 161, 0.75);
+    transition: all .4s ease-in-out;
+}
+
+#login_card_body button:hover {
+    background-position: 100% 0;
+}
+
+/* "Create Account" / "Back to login": a quieter outline button under the form */
+#login_card_body button.secondary {
+    margin-top: 0;
+    background-image: none;
+    background-color: transparent;
+    box-shadow: inset 0 0 0 2px #ffffffb3;
+}
+
+#login_card_body button.secondary:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Rule of the password, shown under its field when creating an account */
+#password_hint {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--accent-text);
+}
+
 /* Phones: this block is at the end of the file so it wins over the desktop rules above */
 @media (max-width: 800px) {
 
@@ -546,6 +669,10 @@ label {
     }
 
     #motion_btn {
+        margin-left: 0;
+    }
+
+    #header_actions {
         margin-left: 0;
     }
 

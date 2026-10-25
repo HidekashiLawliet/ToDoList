@@ -20,12 +20,28 @@ CREATE DATABASE IF NOT EXISTS todo
 
 USE todo;
 
--- One row per task
+-- One row per user.
+-- pseudonyme is UNIQUE (a TINYTEXT column cannot be, hence VARCHAR): the sign-up relies on it.
+-- hashed_password is a bcrypt hash (60 characters), never the password itself.
+CREATE TABLE IF NOT EXISTS users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    pseudonyme VARCHAR(50) NOT NULL UNIQUE,
+    hashed_password VARCHAR(255) NOT NULL
+)
+COLLATE='utf8mb4_uca1400_ai_ci'
+ENGINE=InnoDB;
+
+-- One row per task. parent_id is its owner: the user (users.user_id) who created it, and the only one who sees it.
+-- Deleting a user deletes their tasks, and through subtask's own cascade their sub-tasks.
 CREATE TABLE IF NOT EXISTS todos (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    parent_id INT NOT NULL,
     text VARCHAR(255) NOT NULL,
-    done BOOLEAN NOT NULL DEFAULT FALSE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+    done BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (parent_id) REFERENCES users(user_id) ON DELETE CASCADE
+)
+COLLATE='utf8mb4_uca1400_ai_ci'
+ENGINE=InnoDB;
 
 -- One row per sub-task. ON DELETE CASCADE removes a task's sub-tasks
 -- when the task itself is deleted.
@@ -35,7 +51,9 @@ CREATE TABLE IF NOT EXISTS subtask (
     text VARCHAR(255) NOT NULL,
     done BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (parent_id) REFERENCES todos(id) ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+)
+COLLATE='utf8mb4_uca1400_ai_ci'
+ENGINE=InnoDB;
 
 -- The app's user: least privilege, data only, on this database only
 CREATE USER IF NOT EXISTS 'todo_user'@'localhost' IDENTIFIED BY 'change_me';

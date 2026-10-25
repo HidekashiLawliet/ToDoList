@@ -15,7 +15,7 @@ cp .env.example .env   # then fill in the values, see below
 npm start
 ```
 
-Open <http://localhost:3000>. On Windows you can also double-click `todo.bat`, which opens the browser and starts the server.
+Open <http://localhost:3000>. You are sent to the login page first (see [Login](#login)). On Windows you can also double-click `todo.bat`, which opens the browser and starts the server.
 
 ## Configuration (`.env`)
 
@@ -36,6 +36,7 @@ Open <http://localhost:3000>. On Windows you can also double-click `todo.bat`, w
 | ------------------- | --------------------------------------------------------------------- |
 | `npm start`         | Starts the server (Node runs `server.ts` directly by stripping types) |
 | `npm run typecheck` | Checks the TypeScript types with `tsc` (nothing is compiled)          |
+| `node --test`       | Runs the unit tests (`*.test.ts`, no database needed)                 |
 
 ## API
 
@@ -50,15 +51,57 @@ Open <http://localhost:3000>. On Windows you can also double-click `todo.bat`, w
 | `DELETE` | `/todos/:todoId/subtasks/:id` |            | Delete a sub-task               |
 | `GET`    | `/weather?city=Paris`         |            | Current weather for a city      |
 
+All the routes above need a login (`401` without one) and only ever see **the logged-in user's own tasks**: a task or sub-task of somebody else answers `404`, as if it did not exist. `POST /userlogin`, `POST /userregister` and `POST /userlogout` are described in the next section.
+
+## Login
+
+The app asks for a login. [login.html](public/login.html) is a single form with two modes:
+
+- **Login**: sends `username` and `password` to `POST /userlogin`.
+- **Create Account** (the button under the form): the same form then asks for *pseudonyme*, *password* and *confirm password* and sends them to `POST /userregister`. The rules are in [register.ts](register.ts): pseudonyme of 3 to 50 characters, password of 8 to 72 characters, both passwords identical. The password is hashed with bcrypt and stored in `users.hashed_password`, and the new user is logged in at once. A pseudonyme that is already taken (it is `UNIQUE`, and MariaDB ignores the case) sends the form back with a message.
+
+The **Log out** button of the app posts to `POST /userlogout`, which forgets the session, deletes the cookie and goes back to the login page.
+
+When the values match, the server sets a session cookie (`HttpOnly`, `SameSite=Lax`, 8 hours) and sends the browser to the app. Without a session, `/` redirects to the login page and `/todos` and `/weather` answer `401`. Sessions are kept in memory: restarting the server logs everybody out.
+
+The `hashed_password` column holds a **bcrypt hash**, never the password itself, and the password always travels in the request body, never in a URL. Anyone who can reach the server can create an account, and each account only sees its own tasks (see [Database and permissions](#database-and-permissions)).
+
+To add a user by hand instead (as an admin), make the hash from the project folder (type the password, press Enter), then insert the row:
+
+```bash
+node -e "process.stdin.once('data', async d => { console.log(await (await import('bcrypt')).default.hash(d.toString().replace(/[\r\n]+/g, ''), 12)); process.exit(); })"
+```
+
+```sql
+INSERT INTO todo.users (pseudonyme, hashed_password) VALUES ('alice', 'paste-the-hash-here');
+```
+
 ## Database and permissions
 
-The database, the `todos` and `subtask` tables and the app's user are created by [schema.sql](schema.sql), **run once by an admin**:
+The database, the `todos`, `subtask` and `users` tables and the app's user are created by [schema.sql](schema.sql), **run once by an admin**:
 
 ```bash
 mariadb -u root -p < schema.sql
 ```
 
 The app connects as `todo_user`, which only has `SELECT`, `INSERT`, `UPDATE` and `DELETE` on the `todo` database (principle of least privilege). It cannot create, alter or drop tables, so the server never creates the schema itself: it only checks at startup that the tables exist.
+
+The `users` table has one row per user (`user_id`, `pseudonyme`, `hashed_password`). `hashed_password` stores a bcrypt hash, never the password itself (see [Login](#login)).
+
+Every task belongs to a user: `todos.parent_id` holds the `users.user_id` of its owner (foreign key, `ON DELETE CASCADE`). The server takes that id from the session, never from the browser, and every query on `todos` and `subtask` filters on it.
+
+**Database created before the accounts existed?** `schema.sql` does not change tables that already exist, so an admin upgrades them once (replace `1` with the `user_id` that should own the existing tasks, see `SELECT user_id, pseudonyme FROM todo.users;`):
+
+```sql
+UPDATE todo.todos SET parent_id = 1 WHERE parent_id IS NULL OR parent_id = 0;
+ALTER TABLE todo.todos
+    MODIFY parent_id INT NOT NULL,
+    ADD FOREIGN KEY (parent_id) REFERENCES todo.users (user_id) ON DELETE CASCADE;
+ALTER TABLE todo.users
+    MODIFY pseudonyme VARCHAR(50) NOT NULL,
+    MODIFY hashed_password VARCHAR(255) NOT NULL,
+    ADD UNIQUE (pseudonyme);
+```
 
 ---
 
@@ -171,7 +214,7 @@ You should see:
 ToDo List running on http://localhost:3000
 ```
 
-Open <http://localhost:3000> in your browser. Done!
+Open <http://localhost:3000> in your browser, click **Create Account** to make your first user, and you are in. Done!
 
 ### Troubleshooting
 
@@ -181,6 +224,9 @@ Open <http://localhost:3000> in your browser. Done!
 | `Access denied for user`                       | Wrong `DB_USER` / `DB_PASSWORD` in `.env`, or `schema.sql` was not run (step 6).         |
 | `Unknown database 'todo'` / `Table ... doesn't exist` | An admin must run `schema.sql` (step 6).                                          |
 | `... command denied to user 'todo_user'`       | Expected for anything other than SELECT/INSERT/UPDATE/DELETE: do it as root.             |
+| Logged in but the task list is empty           | Tasks are per user: older tasks have no owner yet, see the upgrade SQL in the Database section. |
 | `SyntaxError` / `Unknown file extension ".ts"` | Your Node.js is too old: install 22.18 or newer (step 2).                                |
 | `EADDRINUSE`                                   | Port 3000 is already used: stop the other program or change `PORT` in `.env`.            |
 | Weather shows an error / `401`                 | API key missing, wrong, or not activated yet (step 4).                                   |
+| Login always says "Wrong username or password" | The `hashed_password` column must be a bcrypt hash and the pseudonyme must match (Login). |
+| Sent back to the login page by itself          | Normal after a server restart or 8 hours: sessions are kept in memory.                   |
