@@ -80,6 +80,7 @@ setAnimations(animationsOn);
 
 // * Database (MariaDB via server.ts) - start with `npm start`
 const API_URL = '/todos';
+const TEXT_MAX = 255; // same limit as todoInput.ts
 
 async function api(path = '', options = {}) {
     const response = await fetch(API_URL + path, {
@@ -90,6 +91,11 @@ async function api(path = '', options = {}) {
         // Session over or server restarted: back to login page
         window.location.href = '/login.html';
         throw new Error('Not logged in');
+    }
+    if (response.status === 400) {
+        // The server says what is wrong with the data
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Invalid data', { cause: 'invalid' });
     }
     if (!response.ok) {
         throw new Error(`Request failed: ${response.status}`);
@@ -137,6 +143,7 @@ function renderItem(item) {
     const subInput = document.createElement('input');
     subInput.type = 'text';
     subInput.className = 'subtask-text';
+    subInput.maxLength = TEXT_MAX;
     subInput.placeholder = 'Add a sub-task';
     subInput.setAttribute('aria-label', `Add a sub-task to ${item.text}`);
     subInput.addEventListener('keydown', function (event) {
@@ -264,6 +271,10 @@ function ItemCounter() {
 function showError(error) {
     // The page is already leaving for the login page
     if (error.message === 'Not logged in') {
+        return;
+    }
+    if (error.cause === 'invalid') {
+        window.alert(error.message);
         return;
     }
     console.error(error);

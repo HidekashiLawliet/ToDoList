@@ -6,6 +6,7 @@ import type { UpsertResult } from 'mariadb';
 import mariadb from 'mariadb';
 import { checkNewUser } from './register.ts';
 import { clearedSessionCookie, createSession, destroySession, readSession, sessionCookie } from './session.ts';
+import { DONE_ERROR, readDone, readText, TEXT_ERROR } from './todoInput.ts';
 
 dotenv.config({ quiet: true });
 
@@ -133,17 +134,25 @@ app.get('/todos', async (req, res) => {
 });
 
 app.post('/todos', async (req, res) => {
-    const text = String(req.body.text ?? '').trim();
-    if (text === '') {
-        return res.status(400).json({ error: 'text is required' });
+    const text = readText(req.body?.text);
+    const done = readDone(req.body?.done, false);
+    if (text === null) {
+        return res.status(400).json({ error: TEXT_ERROR });
+    }
+    if (done === null) {
+        return res.status(400).json({ error: DONE_ERROR });
     }
     // MariaDB gives the id (AUTO_INCREMENT), not the browser
-    const result = await pool.query<UpsertResult>('INSERT INTO todos (parent_id, text, done) VALUES (?, ?, ?)', [ownerOf(res), text, Boolean(req.body.done)]);
-    res.status(201).json({ id: Number(result.insertId), text, done: Boolean(req.body.done), subtasks: [] });
+    const result = await pool.query<UpsertResult>('INSERT INTO todos (parent_id, text, done) VALUES (?, ?, ?)', [ownerOf(res), text, done]);
+    res.status(201).json({ id: Number(result.insertId), text, done, subtasks: [] });
 });
 
 app.patch('/todos/:id', async (req, res) => {
-    const result = await pool.query<UpsertResult>('UPDATE todos SET done = ? WHERE id = ? AND parent_id = ?', [Boolean(req.body.done), req.params.id, ownerOf(res)]);
+    const done = readDone(req.body?.done);
+    if (done === null) {
+        return res.status(400).json({ error: DONE_ERROR });
+    }
+    const result = await pool.query<UpsertResult>('UPDATE todos SET done = ? WHERE id = ? AND parent_id = ?', [done, req.params.id, ownerOf(res)]);
     if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'not found' });
     }
@@ -153,9 +162,9 @@ app.patch('/todos/:id', async (req, res) => {
 
 // Sub-tasks are nested under their todo's URL
 app.post('/todos/:todoId/subtasks', async (req, res) => {
-    const text = String(req.body.text ?? '').trim();
-    if (text === '') {
-        return res.status(400).json({ error: 'text is required' });
+    const text = readText(req.body?.text);
+    if (text === null) {
+        return res.status(400).json({ error: TEXT_ERROR });
     }
     const todos = await pool.query<TodoRow[]>('SELECT id FROM todos WHERE id = ? AND parent_id = ?', [req.params.todoId, ownerOf(res)]);
     if (todos.length === 0) {
@@ -166,10 +175,14 @@ app.post('/todos/:todoId/subtasks', async (req, res) => {
 });
 
 app.patch('/todos/:todoId/subtasks/:id', async (req, res) => {
+    const done = readDone(req.body?.done);
+    if (done === null) {
+        return res.status(400).json({ error: DONE_ERROR });
+    }
     // The todo in the URL must be this user's
     const result = await pool.query<UpsertResult>(
         'UPDATE subtask SET done = ? WHERE id = ? AND parent_id = ? AND parent_id IN (SELECT id FROM todos WHERE parent_id = ?)',
-        [Boolean(req.body.done), req.params.id, req.params.todoId, ownerOf(res)]);
+        [done, req.params.id, req.params.todoId, ownerOf(res)]);
     if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'not found' });
     }

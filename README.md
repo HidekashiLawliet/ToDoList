@@ -40,18 +40,68 @@ Open <http://localhost:3000>. You are sent to the login page first (see [Login](
 
 ## API
 
-| Method   | Route                         | Body       | Description                     |
-| -------- | ----------------------------- | ---------- | ------------------------------- |
-| `GET`    | `/todos`                      |            | All tasks with their sub-tasks  |
-| `POST`   | `/todos`                      | `{ text }` | Create a task                   |
-| `PATCH`  | `/todos/:id`                  | `{ done }` | Mark a task done / not done     |
-| `DELETE` | `/todos/:id`                  |            | Delete a task and its sub-tasks |
-| `POST`   | `/todos/:todoId/subtasks`     | `{ text }` | Add a sub-task                  |
-| `PATCH`  | `/todos/:todoId/subtasks/:id` | `{ done }` | Mark a sub-task done / not done |
-| `DELETE` | `/todos/:todoId/subtasks/:id` |            | Delete a sub-task               |
-| `GET`    | `/weather?city=Paris`         |            | Current weather for a city      |
+| Method   | Route                         | Body             | Description                     |
+| -------- | ----------------------------- | ---------------- | ------------------------------- |
+| `GET`    | `/todos`                      |                  | All tasks with their sub-tasks  |
+| `POST`   | `/todos`                      | `{ text, done? }` | Create a task                   |
+| `PATCH`  | `/todos/:id`                  | `{ done }`       | Mark a task done / not done     |
+| `DELETE` | `/todos/:id`                  |                  | Delete a task and its sub-tasks |
+| `POST`   | `/todos/:todoId/subtasks`     | `{ text }`       | Add a sub-task                  |
+| `PATCH`  | `/todos/:todoId/subtasks/:id` | `{ done }`       | Mark a sub-task done / not done |
+| `DELETE` | `/todos/:todoId/subtasks/:id` |                  | Delete a sub-task               |
+| `GET`    | `/weather?city=Paris`         |                  | Current weather for a city      |
 
 All the routes above need a login (`401` without one) and only ever see **the logged-in user's own tasks**: a task or sub-task of somebody else answers `404`, as if it did not exist. `POST /userlogin`, `POST /userregister` and `POST /userlogout` are described in the next section.
+
+## Validation of the data
+
+The server checks `text` and `done` **before any SQL runs** ([todoInput.ts](todoInput.ts), tested in [todoInput.test.ts](todoInput.test.ts)). The `maxlength` on the inputs only saves the user a round trip: it can be bypassed, so the check that counts is the one on the server. The database column is the last safety net.
+
+```mermaid
+flowchart TD
+    U["<b>Browser</b> - 1st check: maxlength=255<br/>(comfort only, it can be bypassed)"]
+    J["<b>express.json()</b><br/>the JSON body becomes req.body"]
+    V["<b>2nd check: todoInput.ts</b><br/>readText(text) and readDone(done)<br/>(the real protection)"]
+    E400["<b>400</b> { error: ... }<br/>nothing is sent to the database"]
+    Q["<b>Query with ? placeholders</b><br/>owner = user of the session"]
+    DB[("<b>3rd check: MariaDB</b><br/>text VARCHAR(255) · done BOOLEAN<br/>(last safety net)")]
+    OK["<b>201 / 200</b><br/>the saved task"]
+    E500["<b>500</b> database error<br/>(a 256-character text, before M3)"]
+
+    U -->|"POST /todos  { text, done }"| J
+    J --> V
+    V -->|"text not 1 to 255 characters<br/>or done not true / false"| E400
+    V -->|"valid"| Q
+    Q --> DB
+    DB -->|"stored"| OK
+    DB -.->|"too long, if step 2 is missing"| E500
+
+    classDef ok fill:#d9f2e0,stroke:#1b7a3a,color:#0b3d1c
+    classDef bad fill:#ffe7c2,stroke:#b35c00,color:#4a2600
+    classDef err fill:#fbd5d5,stroke:#b3261e,color:#4d0f0b,stroke-dasharray:5 3
+    classDef step fill:#e6edff,stroke:#3b5bdb,color:#10215e
+    class U,J,Q step
+    class V,DB step
+    style V stroke-width:3px
+    style DB stroke-width:3px
+    class OK ok
+    class E400 bad
+    class E500 err
+```
+
+| Field  | Rule                                                                                                                | Answer if wrong                                         |
+| ------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `text` | A string of 1 to 255 characters once the spaces around it are removed (an emoji counts as 1, like `VARCHAR(255)`). | `400` `{ "error": "text must have 1 to 255 characters" }` |
+| `done` | A real JSON boolean, `true` or `false`. Not `"false"`, `0`, `1` or `null`.                                           | `400` `{ "error": "done must be true or false" }`       |
+
+| Route                          | `text`   | `done`                       |
+| ------------------------------ | -------- | ---------------------------- |
+| `POST /todos`                  | required | optional (`false` if missing) |
+| `PATCH /todos/:id`             |          | required                     |
+| `POST /todos/:todoId/subtasks` | required |                              |
+| `PATCH .../subtasks/:id`       |          | required                     |
+
+Before this check, a text of 256 characters reached MariaDB, which refused it, and the server answered `500 database error`. Also, `"false"` sent as a string was stored as `true` (`Boolean("false")` is `true`), and a `PATCH` without `done` silently unticked the task.
 
 ## Login
 
