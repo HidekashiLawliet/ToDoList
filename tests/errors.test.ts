@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { describeError, HttpError, notFound } from './errors.ts';
+import { describeError, HttpError, notFound } from '../src/errors.ts';
 
 test('an HttpError keeps its own status and message', () => {
     assert.deepEqual(describeError(new HttpError(401, 'login required')), { status: 401, message: 'login required' });

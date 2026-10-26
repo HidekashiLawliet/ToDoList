@@ -302,6 +302,9 @@ async function deleteAll() {
     }
 }
 
+document.getElementById('addBtn').addEventListener('click', addItemInList);
+document.getElementById('delete_all').addEventListener('click', deleteAll);
+
 // * -------------------
 
 // * Pomodoro timer: 30 min focus, 5 min break, repeat

@@ -9,12 +9,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Tiny inline icon: no extra request for /favicon.ico -->
         <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Ctext%20y=%27.9em%27%20font-size=%2790%27%3E%E2%9C%85%3C/text%3E%3C/svg%3E">
-        <link rel="stylesheet" href="index.css">
+        <link rel="stylesheet" href="css/style.css">
     </head>
 
     <body class="container">
         <header id="header">
-            <!-- index.js types the visible text; screen readers use aria-label -->
+            <!-- js/index.js types the visible text; screen readers use aria-label -->
             <h1 id="title" aria-label="Stay focused and productive!">&#12644;</h1>
             <div id="header_actions">
                 <button id="motion_btn" type="button">Pause animations</button>
@@ -24,7 +24,7 @@
                 </form>
             </div>
         </header>
-        <!-- Decorative: index.js skips it for reduced motion or data saving -->
+        <!-- Decorative: js/index.js skips it for reduced motion or data saving -->
         <video id="bg_video" muted loop playsinline preload="none" aria-hidden="true">
             <source src="assets/black-hole2.960x540.mp4" type="video/mp4">
         </video>
@@ -33,14 +33,14 @@
             <div id="task_card_body">
                 <div id="text_area">
                     <input type="text" id="todo_text" placeholder="Add a task" aria-label="Add a task" maxlength="255">
-                    <button id="addBtn" onclick="addItemInList()">Add new task</button>
+                    <button id="addBtn">Add new task</button>
                 </div>
                 <div id="task">
                     <ul id="scroll_list"></ul>
                 </div>
                 <div class="project_counter">
                     <p role="status">number of tasks: <span id="project_counter">0</span></p>
-                    <button id="delete_all" onclick="deleteAll()">Delete all task</button>
+                    <button id="delete_all">Delete all task</button>
                 </div>
             </div>
         </main>
@@ -76,7 +76,7 @@
                 </div>
             </div>
         </aside>
-        <script src="index.js" async defer></script>
+        <script src="js/index.js" async defer></script>
     </body>
 
 </html>

@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import mariadb from 'mariadb';
+import path from 'node:path';
 import { createApp } from './app.ts';
 import { createRepository } from './repository.ts';
 
@@ -18,7 +19,7 @@ async function start() {
     await repo.checkSchema();
     const app = await createApp({
         repo,
-        publicDir: import.meta.dirname + '/public',
+        publicDir: path.join(import.meta.dirname, '..', 'public'),
         weatherApiKey: process.env.WEATHER_API_KEY,
     });
     const port = process.env.PORT || 3000;
@@ -27,6 +28,6 @@ async function start() {
 
 start().catch((err: Error) => {
     console.error('Could not connect to MariaDB:', err.message);
-    console.error('Has an admin run schema.sql? (mariadb -u root -p < schema.sql) users needs user_id, pseudonyme, hashed_password and todos needs parent_id (the owner).');
+    console.error('Has an admin run schema.sql? (mariadb -u root -p < database/schema.sql) users needs user_id, pseudonyme, hashed_password and todos needs parent_id (the owner).');
     process.exit(1);
 });

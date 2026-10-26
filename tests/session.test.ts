@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { clearedSessionCookie, createSession, destroySession, readCookie, readSession, sessionCookie } from './session.ts';
+import { clearedSessionCookie, createSession, destroySession, readCookie, readSession, sessionCookie } from '../src/session.ts';
 
 test('readCookie finds one cookie among several', () => {
     assert.equal(readCookie('a=1; sid=abc; b=2', 'sid'), 'abc');

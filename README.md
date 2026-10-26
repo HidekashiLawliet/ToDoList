@@ -3,7 +3,7 @@
 A to-do list with sub-tasks, a Pomodoro focus timer and a weather widget.
 
 - **Front end:** plain HTML / CSS / JavaScript in [public/](public/)
-- **Back end:** Node.js + Express, written in TypeScript ([server.ts](server.ts) starts it, [app.ts](app.ts) holds the routes)
+- **Back end:** Node.js + Express, written in TypeScript ([server.ts](src/server.ts) starts it, [app.ts](src/app.ts) holds the routes)
 - **Database:** MariaDB (tasks and sub-tasks)
 - **Weather:** OpenWeatherMap API, called by the server so the API key never reaches the browser
 
@@ -34,20 +34,32 @@ Open <http://localhost:3000>. You are sent to the login page first (see [Login](
 
 | Command             | What it does                                                          |
 | ------------------- | --------------------------------------------------------------------- |
-| `npm start`         | Starts the server (Node runs `server.ts` directly by stripping types) |
+| `npm start`         | Starts the server (Node runs `src/server.ts` directly by stripping types) |
 | `npm run typecheck` | Checks the TypeScript types with `tsc` (nothing is compiled)          |
 | `npm test`          | Runs all the tests (`*.test.ts`), no MariaDB needed                   |
 
 ## Code layout
 
+```text
+ToDoList/
+├── src/          back end (TypeScript)
+├── tests/        *.test.ts, run by npm test
+├── database/     schema.sql
+└── public/       served as is by Express
+    ├── index.html, login.html   HTML only, no inline script
+    ├── css/style.css            shared by both pages
+    ├── js/index.js, js/login.js
+    └── assets/                  background video
+```
+
 | File                                                                               | Role                                                                                    |
 | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [server.ts](server.ts)                                                             | Startup only: reads `.env`, opens the MariaDB pool, checks the schema, starts listening |
-| [app.ts](app.ts)                                                                   | `createApp()`: middleware, routes and the error handler. It contains no SQL             |
-| [repository.ts](repository.ts)                                                     | `createRepository(db)`: every SQL statement. Each task query filters on the owner       |
-| [errors.ts](errors.ts)                                                             | `HttpError` and `describeError()`: the one place that picks a status and a message      |
-| [todoInput.ts](todoInput.ts), [register.ts](register.ts), [session.ts](session.ts) | Rules for tasks, rules for sign-up, in-memory sessions                                  |
-| `*.test.ts`                                                                        | The tests (see [Tests](#tests))                                                         |
+| [server.ts](src/server.ts)                                                             | Startup only: reads `.env`, opens the MariaDB pool, checks the schema, starts listening |
+| [app.ts](src/app.ts)                                                                   | `createApp()`: middleware, routes and the error handler. It contains no SQL             |
+| [repository.ts](src/repository.ts)                                                     | `createRepository(db)`: every SQL statement. Each task query filters on the owner       |
+| [errors.ts](src/errors.ts)                                                             | `HttpError` and `describeError()`: the one place that picks a status and a message      |
+| [todoInput.ts](src/todoInput.ts), [register.ts](src/register.ts), [session.ts](src/session.ts) | Rules for tasks, rules for sign-up, in-memory sessions                                  |
+| `tests/*.test.ts`                                                                      | The tests (see [Tests](#tests))                                                         |
 
 `app.ts` receives its repository from outside (`createApp({ repo, ... })`): only `server.ts` knows about MariaDB.
 
@@ -68,7 +80,7 @@ All the routes above need a login (`401` without one) and only ever see **the lo
 
 ## Validation of the data
 
-The server checks `text` and `done` **before any SQL runs** ([todoInput.ts](todoInput.ts), tested in [todoInput.test.ts](todoInput.test.ts)). The `maxlength` on the inputs only saves the user a round trip: it can be bypassed, so the check that counts is the one on the server. The database column is the last safety net.
+The server checks `text` and `done` **before any SQL runs** ([todoInput.ts](src/todoInput.ts), tested in [todoInput.test.ts](tests/todoInput.test.ts)). The `maxlength` on the inputs only saves the user a round trip: it can be bypassed, so the check that counts is the one on the server. The database column is the last safety net.
 
 ```mermaid
 flowchart TD
@@ -104,7 +116,7 @@ flowchart TD
 
 ## Errors
 
-Every failed request to `/todos` and `/weather` answers JSON of the form `{ "error": "..." }`, built in one place ([errors.ts](errors.ts)). A route either throws an `HttpError` (it knows its status) or lets an unexpected error go through: the error handler then picks the status, so the answer never claims "database error" for something that is not one.
+Every failed request to `/todos` and `/weather` answers JSON of the form `{ "error": "..." }`, built in one place ([errors.ts](src/errors.ts)). A route either throws an `HttpError` (it knows its status) or lets an unexpected error go through: the error handler then picks the status, so the answer never claims "database error" for something that is not one.
 
 | Status | `error`                                                                                | When                                                                                              |
 | ------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -123,24 +135,24 @@ The form routes (`/userlogin`, `/userregister`, `/userlogout`) answer with redir
 
 ```bash
 npm test                      # every *.test.ts
-node --test errors.test.ts    # one file
+node --test tests/errors.test.ts    # one file
 ```
 
 | File                                   | What it checks                                       |
 | -------------------------------------- | ---------------------------------------------------- |
-| [register.test.ts](register.test.ts)   | The sign-up rules                                    |
-| [session.test.ts](session.test.ts)     | Sessions and cookies                                 |
-| [todoInput.test.ts](todoInput.test.ts) | The checks on `text`, `done` and ids                 |
-| [errors.test.ts](errors.test.ts)       | The status and message chosen for each kind of error |
+| [register.test.ts](tests/register.test.ts)   | The sign-up rules                                    |
+| [session.test.ts](tests/session.test.ts)     | Sessions and cookies                                 |
+| [todoInput.test.ts](tests/todoInput.test.ts) | The checks on `text`, `done` and ids                 |
+| [errors.test.ts](tests/errors.test.ts)       | The status and message chosen for each kind of error |
 
-They need no server and no database, so `npm test` runs anywhere. The SQL in [repository.ts](repository.ts) and the routes in [app.ts](app.ts) are not covered by tests: check them by hand, for example with two accounts that must each see only their own tasks.
+They need no server and no database, so `npm test` runs anywhere. The SQL in [repository.ts](src/repository.ts) and the routes in [app.ts](src/app.ts) are not covered by tests: check them by hand, for example with two accounts that must each see only their own tasks.
 
 ## Login
 
-The app asks for a login. [login.html](public/login.html) is a single form with two modes:
+The app asks for a login. [login.html](public/login.html) (script in [js/login.js](public/js/login.js)) is a single form with two modes:
 
 - **Login**: sends `username` and `password` to `POST /userlogin`.
-- **Create Account** (the button under the form): the same form then asks for _pseudonyme_, _password_ and _confirm password_ and sends them to `POST /userregister`. The rules are in [register.ts](register.ts): pseudonyme of 3 to 50 characters, password of 8 to 72 characters, both passwords identical. The password is hashed with bcrypt and stored in `users.hashed_password`, and the new user is logged in at once. A pseudonyme that is already taken (it is `UNIQUE`, and MariaDB ignores the case) sends the form back with a message.
+- **Create Account** (the button under the form): the same form then asks for _pseudonyme_, _password_ and _confirm password_ and sends them to `POST /userregister`. The rules are in [register.ts](src/register.ts): pseudonyme of 3 to 50 characters, password of 8 to 72 characters, both passwords identical. The password is hashed with bcrypt and stored in `users.hashed_password`, and the new user is logged in at once. A pseudonyme that is already taken (it is `UNIQUE`, and MariaDB ignores the case) sends the form back with a message.
 
 The **Log out** button of the app posts to `POST /userlogout`, which forgets the session, deletes the cookie and goes back to the login page.
 
@@ -149,7 +161,7 @@ When the values match, the server sets a session cookie (`HttpOnly`, `SameSite=L
 The `hashed_password` column holds a **bcrypt hash**, never the password itself, and the password always travels in the request body, never in a URL. Anyone who can reach the server can create an account, and each account only sees its own tasks (see [Database and permissions](#database-and-permissions)).
 
 ```bash
-mariadb -u root -p < schema.sql
+mariadb -u root -p < database/schema.sql
 ```
 
 ---
@@ -205,7 +217,7 @@ cd ToDoList
 
 This step is done **as the MariaDB admin (`root`)**, with two files:
 
-- [schema.sql](schema.sql) creates the database and the tables. It holds no password: run it as it is.
+- [schema.sql](database/schema.sql) creates the database and the tables. It holds no password: run it as it is.
 
 1. Copy the template, then open the copy and replace `'change_me'` with a real password. You will put the same one in `.env` (step 8):
 
@@ -217,12 +229,12 @@ This step is done **as the MariaDB admin (`root`)**, with two files:
 2. Run both files from the project folder, in this order, and enter the root password each time:
 
       ```bash
-      mariadb -u root -p < schema.sql
+      mariadb -u root -p < database/schema.sql
       mariadb -u root -p < create_user.local.sql
       ```
 
-      In PowerShell, `<` does not work, use: `Get-Content schema.sql | mariadb -u root -p` (and the same with `create_user.local.sql`).
-      If `mariadb` is not found, open the **MySQL Client (MariaDB)** shortcut from the Start menu and type `source C:/path/to/ToDoList/schema.sql` then `source C:/path/to/ToDoList/create_user.local.sql`.
+      In PowerShell, `<` does not work, use: `Get-Content database/schema.sql | mariadb -u root -p` (and the same with `create_user.local.sql`).
+      If `mariadb` is not found, open the **MySQL Client (MariaDB)** shortcut from the Start menu and type `source C:/path/to/ToDoList/database/schema.sql` then `source C:/path/to/ToDoList/create_user.local.sql`.
 
 3. Check the user's rights:
 

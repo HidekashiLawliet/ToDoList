@@ -2,9 +2,9 @@
   "name": "todolist",
   "version": "1.0.0",
   "description": "",
-  "main": "./server.ts",
+  "main": "./src/server.ts",
   "scripts": {
-    "start": "node server.ts",
+    "start": "node src/server.ts",
     "test": "node --test",
     "typecheck": "tsc"
   },

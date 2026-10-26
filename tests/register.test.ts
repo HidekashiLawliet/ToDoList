@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { checkNewUser } from './register.ts';
+import { checkNewUser } from '../src/register.ts';
 
 test('a normal sign-up is accepted', () => {
     assert.equal(checkNewUser('alice', 'correct horse', 'correct horse'), null);

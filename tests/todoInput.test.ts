@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readDone, readId, readText, TEXT_MAX } from './todoInput.ts';
+import { readDone, readId, readText, TEXT_MAX } from '../src/todoInput.ts';
 
 test('text: a normal text is kept', () => {
     assert.equal(readText('Buy milk'), 'Buy milk');

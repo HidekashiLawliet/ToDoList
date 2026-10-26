@@ -24,7 +24,7 @@ export async function createApp(options: AppOptions) {
     const { repo, publicDir, weatherApiKey, fetchWeather = fetch, bcryptRounds = 12 } = options;
     const app = express();
     app.use(express.json());
-    // Parses the plain HTML form posted by login.html
+    // Parses the plain HTML form posted by public/login.html
     app.use(express.urlencoded({ extended: false }));
 
     // Dummy hash, compared for unknown users to equalise timing
