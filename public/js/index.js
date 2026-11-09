@@ -380,12 +380,24 @@ function beep(count = 3, length = 0.5, gap = 0.5) {
         oscillator.start(startAt);
         oscillator.stop(startAt + length);
     }
+    NotificationTimer(isBreak);
 }
 
 document.getElementById('startBtn').addEventListener('click', startTimer);
 document.getElementById('pauseBtn').addEventListener('click', pauseTimer);
 document.getElementById('resetBtn').addEventListener('click', resetTimer);
 
+function NotificationTimer(isBreak) {
+    const notification = new Notification("Fin du timer", {
+        body: isBreak ? 'Back to work!' : 'Take a break!',
+    });
+
+    // Gérer les événements (clic, fermeture)
+    notification.onclick = function () {
+        window.focus();
+        notification.close();
+    };
+}
 // * -------------------
 
 
