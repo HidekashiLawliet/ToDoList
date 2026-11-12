@@ -4,6 +4,7 @@ import express from 'express';
 import { describeError, HttpError, notFound } from './errors.ts';
 import { checkNewUser } from './register.ts';
 import type { Repository } from './repository.ts';
+import { authorizeUrl, challengeOf, createVerifier, finishLogin, forgetTokens, readTokens, returnAddress, saveTokens, startLogin, tokensFrom } from './spotify.ts';
 import { clearedSessionCookie, createSession, destroySession, readSession, sessionCookie } from './session.ts';
 import { DONE_ERROR, readDone, readId, readText, TEXT_ERROR } from './todoInput.ts';
 
@@ -15,13 +16,22 @@ export interface AppOptions {
     fetchWeather?: typeof fetch;
     // Tests use a low cost to stay fast
     bcryptRounds?: number;
+    // Spotify login (PKCE); the redirect URI must match the Spotify dashboard
+    spotifyClientId?: string;
+    spotifyRedirectUri?: string;
+    fetchSpotify?: typeof fetch;
 }
+
+const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 
 // parent_id is the owner's user_id; the session provides it
 const ownerOf = (res: Response): number => res.locals.userId;
 
 export async function createApp(options: AppOptions) {
-    const { repo, publicDir, weatherApiKey, fetchWeather = fetch, bcryptRounds = 12 } = options;
+    const {
+        repo, publicDir, weatherApiKey, fetchWeather = fetch, bcryptRounds = 12,
+        spotifyClientId, spotifyRedirectUri = '', fetchSpotify = fetch,
+    } = options;
     const app = express();
     app.use(express.json());
     // Parses the plain HTML form posted by public/login.html
@@ -65,9 +75,38 @@ export async function createApp(options: AppOptions) {
 
     // Forget the session, delete the cookie, back to login
     app.post('/userlogout', (req, res) => {
+        const session = readSession(req.headers.cookie);
+        if (session !== undefined) {
+            forgetTokens(session.userId);
+        }
         destroySession(req.headers.cookie);
         res.set('Set-Cookie', clearedSessionCookie(req.secure));
         res.redirect(303, '/login.html');
+    });
+
+    // Spotify comes back here with a one-time code. Before the login check:
+    // the state says who started the login, the cookie may not come along
+    app.get('/spotify/callback', async (req, res) => {
+        const code = String(req.query.code ?? '');
+        const login = finishLogin(String(req.query.state ?? ''));
+        if (login === undefined) {
+            return res.redirect('/?spotify=error');
+        }
+        if (!spotifyClientId || code === '') {
+            return res.redirect(`${login.returnTo}?spotify=error`);
+        }
+        const tokens = tokensFrom(await requestSpotifyTokens({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: spotifyRedirectUri,
+            client_id: spotifyClientId,
+            code_verifier: login.verifier,
+        }));
+        if (tokens === null) {
+            return res.redirect(`${login.returnTo}?spotify=error`);
+        }
+        saveTokens(login.userId, tokens);
+        res.redirect(login.returnTo);
     });
 
     // Pages redirect to login; data routes answer 401
@@ -78,7 +117,7 @@ export async function createApp(options: AppOptions) {
         res.redirect('/login.html');
     });
 
-    app.use(['/todos', '/weather'], (req, res, next) => {
+    app.use(['/todos', '/weather', '/spotify'], (req, res, next) => {
         const session = readSession(req.headers.cookie);
         if (session === undefined) {
             throw new HttpError(401, 'login required');
@@ -183,6 +222,58 @@ export async function createApp(options: AppOptions) {
             throw new HttpError(502, 'weather service unavailable');
         }
         res.status(status).json(data);
+    });
+
+    // Spotify's answer to a token request, or null if refused or unreachable
+    async function requestSpotifyTokens(params: Record<string, string>): Promise<unknown> {
+        try {
+            const response = await fetchSpotify(SPOTIFY_TOKEN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(params),
+            });
+            return response.ok ? await response.json() : null;
+        } catch {
+            return null;
+        }
+    }
+
+    // Sends the user to Spotify's consent page
+    app.get('/spotify/login', (req, res) => {
+        if (!spotifyClientId) {
+            throw new HttpError(503, 'spotify is not configured');
+        }
+        const verifier = createVerifier();
+        const state = startLogin(ownerOf(res), verifier, returnAddress(req.headers.host));
+        res.redirect(authorizeUrl(spotifyClientId, spotifyRedirectUri, state, challengeOf(verifier)));
+    });
+
+    // The player asks for a fresh access token; refreshed when expired
+    app.get('/spotify/token', async (req, res) => {
+        const userId = ownerOf(res);
+        let tokens = readTokens(userId);
+        if (tokens !== undefined && tokens.expiresAt <= Date.now() && spotifyClientId) {
+            const refreshed = tokensFrom(await requestSpotifyTokens({
+                grant_type: 'refresh_token',
+                refresh_token: tokens.refreshToken,
+                client_id: spotifyClientId,
+            }), tokens.refreshToken);
+            tokens = refreshed ?? undefined;
+            if (refreshed === null) {
+                forgetTokens(userId);
+            } else {
+                saveTokens(userId, refreshed);
+            }
+        }
+        if (tokens === undefined) {
+            return res.json({ connected: false, configured: Boolean(spotifyClientId) });
+        }
+        res.json({ connected: true, accessToken: tokens.accessToken });
+    });
+
+    app.post('/spotify/disconnect', (req, res) => {
+        forgetTokens(ownerOf(res));
+        res.status(204).end();
     });
 
     app.use(() => {

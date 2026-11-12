@@ -14,6 +14,8 @@ const pool = mariadb.createPool({
 });
 const repo = createRepository(pool);
 
+const port = process.env.PORT || 3000;
+
 async function start() {
     // Outdated schema fails at startup, not on first request
     await repo.checkSchema();
@@ -21,8 +23,10 @@ async function start() {
         repo,
         publicDir: path.join(import.meta.dirname, '..', 'public'),
         weatherApiKey: process.env.WEATHER_API_KEY,
+        spotifyClientId: process.env.spotify_client_id,
+        // Spotify refuses "localhost" redirect URIs; Electron opens 127.0.0.1 too
+        spotifyRedirectUri: `http://127.0.0.1:${port}/spotify/callback`,
     });
-    const port = process.env.PORT || 3000;
     app.listen(port, () => console.log(`ToDo List running on http://localhost:${port}`));
 }
 

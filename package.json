@@ -2,11 +2,13 @@
   "name": "todolist",
   "version": "1.0.0",
   "description": "",
-  "main": "./src/server.ts",
+  "main": "electron/main.js",
   "scripts": {
     "start": "node src/server.ts",
     "test": "node --test",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "app": "electron .",
+    "sign": "python -m castlabs_evs.vmp sign-pkg node_modules/electron/dist"
   },
   "author": "",
   "license": "ISC",
@@ -20,6 +22,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.5",
+    "electron": "https://github.com/castlabs/electron-releases/archive/refs/tags/v45.2.1%2Bwvcus.tar.gz",
     "typescript": "^7.0.2"
   },
   "engines": {

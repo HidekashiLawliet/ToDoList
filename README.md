@@ -1,6 +1,6 @@
 # ToDo List
 
-A to-do list with sub-tasks, a Pomodoro focus timer and a weather widget.
+A to-do list with sub-tasks, a Pomodoro focus timer, a weather widget and a Spotify player.
 
 - **Front end:** plain HTML / CSS / JavaScript in [public/](public/)
 - **Back end:** Node.js + Express, written in TypeScript ([server.ts](src/server.ts) starts it, [app.ts](src/app.ts) holds the routes)
@@ -15,7 +15,7 @@ cp .env.example .env   # then fill in the values, see below
 npm start
 ```
 
-Open <http://localhost:3000>. You are sent to the login page first (see [Login](#login)). On Windows you can also double-click `todo.bat`, which opens the browser and starts the server.
+Open <http://localhost:3000>. You are sent to the login page first (see [Login](#login)). Or run `npm run app` to open it as a desktop app (Electron, [electron/main.js](electron/main.js)); on Windows, double-clicking `todo.bat` does the same.
 
 ## Configuration (`.env`)
 
@@ -27,6 +27,7 @@ Open <http://localhost:3000>. You are sent to the login page first (see [Login](
 | `DB_NAME`         | Database name, `todo` by default              |
 | `PORT`            | Port the server listens on, `3000` by default |
 | `WEATHER_API_KEY` | Your OpenWeatherMap API key                   |
+| `spotify_client_id` | Client ID of your Spotify developer app (see [Spotify player](#spotify-player)) |
 
 `.env` is ignored by git: never commit your passwords or API key.
 
@@ -34,6 +35,8 @@ Open <http://localhost:3000>. You are sent to the login page first (see [Login](
 
 | Command             | What it does                                                          |
 | ------------------- | --------------------------------------------------------------------- |
+| `npm run app`       | Opens the app in its own Electron window (starts the server for you)  |
+| `npm run sign`      | VMP-signs Electron so Spotify can play (see [Spotify player](#spotify-player)) |
 | `npm start`         | Starts the server (Node runs `src/server.ts` directly by stripping types) |
 | `npm run typecheck` | Checks the TypeScript types with `tsc` (nothing is compiled)          |
 | `npm test`          | Runs all the tests (`*.test.ts`), no MariaDB needed                   |
@@ -75,6 +78,10 @@ ToDoList/
 | `PATCH`  | `/todos/:todoId/subtasks/:id` | `{ done }`        | Mark a sub-task done / not done |
 | `DELETE` | `/todos/:todoId/subtasks/:id` |                   | Delete a sub-task               |
 | `GET`    | `/weather?city=Paris`         |                   | Current weather for a city      |
+| `GET`    | `/spotify/login`              |                   | Redirects to Spotify's login    |
+| `GET`    | `/spotify/callback`           |                   | Spotify comes back here         |
+| `GET`    | `/spotify/token`              |                   | `{ connected, accessToken }`    |
+| `POST`   | `/spotify/disconnect`         |                   | Forgets the Spotify login       |
 
 All the routes above need a login (`401` without one) and only ever see **the logged-in user's own tasks**: a task or sub-task of somebody else answers `404`, as if it did not exist. `POST /userlogin`, `POST /userregister` and `POST /userlogout` are described in the next section.
 
@@ -131,6 +138,30 @@ Every failed request to `/todos` and `/weather` answers JSON of the form `{ "err
 
 The form routes (`/userlogin`, `/userregister`, `/userlogout`) answer with redirects, not JSON.
 
+## Spotify player
+
+The header holds a Spotify player ([js/spotify.js](public/js/spotify.js), server side in [spotify.ts](src/spotify.ts)) built on the Spotify **Web Playback SDK**. It needs:
+
+- **Spotify Premium**: free accounts get "Spotify Premium is required".
+- **A Spotify developer app** on <https://developer.spotify.com/dashboard> with the Redirect URI `http://127.0.0.1:3000/spotify/callback` (Spotify refuses `localhost`), the **Web API** and **Web Playback SDK** ticked, and every Spotify account that uses it added in **User Management**. Its Client ID goes in `.env` as `spotify_client_id`; no client secret is used (PKCE login).
+- **Widevine**, which plain Electron does not have. The app must run on the castLabs build of Electron:
+
+  ```bash
+  npm install --save-dev "electron@https://github.com/castlabs/electron-releases/archive/refs/tags/v45.2.1%2Bwvcus.tar.gz"
+  ```
+
+  The npm package comes as a GitHub tarball, so no git is needed. Spotify only licenses **VMP-signed** apps (otherwise playback fails with a `500` on `.../widevine/.../license`), so sign it once with castLabs' free EVS tool (Python 3):
+
+  ```bash
+  python -m pip install --upgrade castlabs-evs
+  python -m castlabs_evs.account signup   # once; "reauth" to log in again later
+  npm run sign
+  ```
+
+  Run `npm run sign` again after every `npm install` that reinstalls Electron: it replaces the signed files. On first launch Electron downloads the Widevine module from Google. The player also works in a normal browser such as Chrome, which already has Widevine.
+
+Click **Connect Spotify**, accept on Spotify's page, and the player appears as a device called **ToDo List**. Spotify logins are kept in memory like sessions: after a restart, connect again. Logging out of the app forgets them too.
+
 ## Tests
 
 ```bash
@@ -144,6 +175,7 @@ node --test tests/errors.test.ts    # one file
 | [session.test.ts](tests/session.test.ts)     | Sessions and cookies                                 |
 | [todoInput.test.ts](tests/todoInput.test.ts) | The checks on `text`, `done` and ids                 |
 | [errors.test.ts](tests/errors.test.ts)       | The status and message chosen for each kind of error |
+| [spotify.test.ts](tests/spotify.test.ts)     | PKCE challenge, Spotify login state, token handling  |
 
 They need no server and no database, so `npm test` runs anywhere. The SQL in [repository.ts](src/repository.ts) and the routes in [app.ts](src/app.ts) are not covered by tests: check them by hand, for example with two accounts that must each see only their own tasks.
 

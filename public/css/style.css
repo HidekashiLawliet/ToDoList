@@ -114,7 +114,7 @@ body {
 
 #header #title {
     display: flex;
-    margin-left: 45%;
+    margin-left: auto;
     font-size: 2rem;
     color: rgb(255, 255, 255);
 }
@@ -130,6 +130,156 @@ body {
 
 #logout_form {
     margin: 0;
+}
+
+/* Spotify player: a small pill pinned to the left of the header, out of
+   the flow so the title keeps its place (filled by js/spotify.js) */
+#header {
+    position: relative;
+}
+
+#spotify_player {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+#spotify_player .sp_root {
+    position: relative;
+}
+
+#spotify_player .sp_pill {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    border-radius: 50px;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+#spotify_player .sp_cover_btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.2rem;
+    background-image: var(--btn-gradient);
+    background-size: 300% 100%;
+}
+
+#spotify_player .sp_cover {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+#spotify_player .sp_cover_small {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+/* Full player: hidden until hover, keyboard focus or a click on the cover */
+#spotify_player .sp_panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: max-content;
+    max-width: min(30rem, 90vw);
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    background-color: #0c0b14;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity .2s ease, transform .2s ease, visibility .2s;
+}
+
+/* Invisible bridge: moving the mouse down to the panel keeps it open */
+#spotify_player .sp_panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -0.6rem;
+    height: 0.6rem;
+}
+
+#spotify_player .sp_root:hover .sp_panel,
+#spotify_player .sp_root:focus-within .sp_panel,
+#spotify_player .sp_root.sp_open .sp_panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+#spotify_player .sp_info {
+    min-width: 0;
+    max-width: 12rem;
+}
+
+#spotify_player p {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#spotify_player .sp_track {
+    font-weight: bold;
+}
+
+#spotify_player .sp_artist,
+#spotify_player .sp_message {
+    color: var(--accent-text);
+    font-size: 0.85rem;
+}
+
+#spotify_player .sp_buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+#spotify_player .sp_btn {
+    color: #fff;
+    cursor: pointer;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    border-radius: 50px;
+    background-image: var(--btn-gradient);
+    background-size: 300% 100%;
+    transition: all .4s ease-in-out;
+
+    &:hover {
+        background-position: 100% 0;
+    }
+}
+
+#spotify_player .sp_connect {
+    padding: 0 1.25rem;
+    font-size: 16px;
+}
+
+#spotify_player .sp_volume {
+    width: 5rem;
+    accent-color: #852D91;
 }
 
 /* Lets anyone stop video and typing effect*/
@@ -670,6 +820,12 @@ label {
 
     #motion_btn {
         margin-left: 0;
+    }
+
+    /* Stacked header: the player takes its own line */
+    #spotify_player {
+        position: static;
+        transform: none;
     }
 
     #header_actions {

@@ -8,12 +8,16 @@
         <meta name="description" content="A ToDo list with sub-tasks, a Pomodoro focus timer and a weather widget.">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <!-- Tiny inline icon: no extra request for /favicon.ico -->
-        <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Ctext%20y=%27.9em%27%20font-size=%2790%27%3E%E2%9C%85%3C/text%3E%3C/svg%3E">
+        <link rel="icon"
+            href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Ctext%20y=%27.9em%27%20font-size=%2790%27%3E%E2%9C%85%3C/text%3E%3C/svg%3E">
         <link rel="stylesheet" href="css/style.css">
     </head>
 
     <body class="container">
         <header id="header">
+            <div id="spotify_player">
+
+            </div>
             <!-- js/index.js types the visible text; screen readers use aria-label -->
             <h1 id="title" aria-label="Stay focused and productive!">&#12644;</h1>
             <div id="header_actions">
@@ -61,7 +65,8 @@
                     <div id="weather_text_area">
                         <h2 class="weather_title">Weather</h2>
                         <div class="weather_card">
-                            <input type="text" class="W_city" id="form_city" placeholder="Enter city name. e.g., Tokyo" aria-label="Enter city name">
+                            <input type="text" class="W_city" id="form_city" placeholder="Enter city name. e.g., Tokyo"
+                                aria-label="Enter city name">
                             <!-- role="status": screen readers announce the new values after a refresh -->
                             <div role="status">
                                 <p class="time">Loading...</p>
@@ -77,6 +82,7 @@
             </div>
         </aside>
         <script src="js/index.js" async defer></script>
+        <script src="js/spotify.js" defer></script>
     </body>
 
 </html>
